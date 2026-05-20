@@ -68,23 +68,41 @@
      ========================================================= */
   function initHome() {
     const nickInput = $('input-nickname');
+    if (!nickInput) {
+      console.error("Élément 'input-nickname' introuvable. Vérifie que index.html est complet.");
+      return;
+    }
     nickInput.value = loadNickname();
-    App.myNickname = nickInput.value;
+    App.myNickname = (nickInput.value || '').trim();
 
     nickInput.addEventListener('input', () => {
       App.myNickname = nickInput.value.trim();
       saveNickname(App.myNickname);
     });
+    // Some mobile keyboards don't fire 'input' reliably; also bind change/blur
+    nickInput.addEventListener('change', () => {
+      App.myNickname = nickInput.value.trim();
+      saveNickname(App.myNickname);
+    });
+
+    // Helper: refresh nickname from input right before navigating
+    function refreshNick() {
+      App.myNickname = nickInput.value.trim();
+      saveNickname(App.myNickname);
+    }
 
     $('btn-goto-create').addEventListener('click', () => {
+      refreshNick();
       if (!ensureNickname()) return;
       UI.showScreen('create');
     });
     $('btn-goto-join').addEventListener('click', () => {
+      refreshNick();
       if (!ensureNickname()) return;
       UI.showScreen('join');
     });
     $('btn-goto-public').addEventListener('click', () => {
+      refreshNick();
       if (!ensureNickname()) return;
       UI.showScreen('public');
       loadPublicRooms();
