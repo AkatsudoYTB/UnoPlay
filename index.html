@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNO Online</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- PeerJS for WebRTC peer-to-peer networking (works on most public WiFi) -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+  <!-- =========================================================
+       SCREEN: HOME
+  ========================================================= -->
+  <section id="screen-home" class="screen active">
+    <div class="home-wrap">
+      <h1 class="logo">UNO<span class="logo-dot">.</span></h1>
+      <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
+
+      <div class="card-panel">
+        <label class="field">
+          <span>Ton pseudo</span>
+          <input id="input-nickname" type="text" maxlength="16" placeholder="Ex : Mathis" autocomplete="off" />
+        </label>
+
+        <div class="home-buttons">
+          <button id="btn-goto-create" class="btn btn-primary">Créer une partie</button>
+          <button id="btn-goto-join" class="btn btn-secondary">Rejoindre via code</button>
+          <button id="btn-goto-public" class="btn btn-ghost">Salons publics</button>
+        </div>
+
+        <p class="hint">
+          Le créateur héberge la partie depuis son navigateur (P2P).
+          Aucun serveur à installer.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: CREATE ROOM
+  ========================================================= -->
+  <section id="screen-create" class="screen">
+    <div class="panel">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Créer une partie</h2>
+
+      <label class="field">
+        <span>Nom du salon</span>
+        <input id="input-room-name" type="text" maxlength="24" placeholder="Salon de Mathis" />
+      </label>
+
+      <label class="checkbox">
+        <input id="input-room-public" type="checkbox" checked />
+        <span>Salon public (visible dans la liste)</span>
+      </label>
+
+      <label class="field">
+        <span>Score gagnant</span>
+        <select id="input-target-score">
+          <option value="200">200 points</option>
+          <option value="500" selected>500 points (officiel)</option>
+          <option value="1000">1000 points</option>
+        </select>
+      </label>
+
+      <label class="checkbox">
+        <input id="input-stacking" type="checkbox" />
+        <span>Règle maison : empilage des +2 et +4</span>
+      </label>
+
+      <button id="btn-create-room" class="btn btn-primary btn-large">Créer le salon</button>
+      <p id="create-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: JOIN BY CODE
+  ========================================================= -->
+  <section id="screen-join" class="screen">
+    <div class="panel">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Rejoindre via code</h2>
+      <label class="field">
+        <span>Code du salon (8 caractères)</span>
+        <input id="input-room-code" type="text" maxlength="8" autocomplete="off"
+               placeholder="AJ5X42SP" style="text-transform:uppercase;letter-spacing:.2em;" />
+      </label>
+      <button id="btn-join-room" class="btn btn-primary btn-large">Rejoindre</button>
+      <p id="join-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: PUBLIC ROOMS
+  ========================================================= -->
+  <section id="screen-public" class="screen">
+    <div class="panel panel-wide">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Salons publics</h2>
+      <p class="subtle">Les salons publics annoncent leur présence via un canal partagé. Si la liste est vide, demande un code à ton hôte.</p>
+      <div id="public-rooms-list" class="rooms-list">
+        <p class="empty-state">Recherche de salons…</p>
+      </div>
+      <button id="btn-refresh-public" class="btn btn-ghost">Rafraîchir</button>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: ROOM LOBBY
+  ========================================================= -->
+  <section id="screen-lobby" class="screen">
+    <div class="panel panel-wide">
+      <button class="btn-back" data-back="home">← Quitter</button>
+      <h2 id="lobby-room-name">Salon</h2>
+
+      <div class="lobby-code-row">
+        <span class="muted">Code :</span>
+        <code id="lobby-room-code" class="room-code hidden-code">••••••••</code>
+        <button id="btn-toggle-code" class="btn-icon" title="Afficher/cacher le code">👁</button>
+        <button id="btn-copy-code" class="btn-icon" title="Copier">📋</button>
+      </div>
+
+      <h3>Joueurs (<span id="lobby-player-count">0</span>/8)</h3>
+      <ul id="lobby-players" class="players-list"></ul>
+
+      <div class="lobby-controls">
+        <button id="btn-ready" class="btn btn-primary">Je suis prêt</button>
+        <button id="btn-start-host" class="btn btn-primary hidden">Lancer la partie</button>
+      </div>
+      <p id="lobby-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: GAME BOARD
+  ========================================================= -->
+  <section id="screen-game" class="screen">
+    <header class="game-topbar">
+      <div class="topbar-left">
+        <span class="muted">Salon :</span> <code id="game-room-code">••••••••</code>
+      </div>
+      <div class="topbar-center">
+        <span id="game-direction">⤵ Sens horaire</span>
+        <span id="game-current-color" class="current-color"></span>
+      </div>
+      <div class="topbar-right">
+        <button id="btn-leave-game" class="btn-link">Quitter</button>
+      </div>
+    </header>
+
+    <div id="opponents" class="opponents"></div>
+
+    <div class="board">
+      <div class="board-center">
+        <div id="draw-pile" class="pile draw-pile" title="Pioche">
+          <div class="card card-back"></div>
+          <span class="pile-count" id="draw-count">0</span>
+        </div>
+        <div id="discard-pile" class="pile discard-pile" title="Talon">
+          <!-- top card injected here -->
+        </div>
+      </div>
+      <div id="turn-indicator" class="turn-indicator"></div>
+    </div>
+
+    <div class="bottom-bar">
+      <button id="btn-uno" class="btn btn-uno">UNO !</button>
+      <div id="my-hand" class="my-hand"></div>
+      <button id="btn-pass" class="btn btn-secondary hidden">Passer mon tour</button>
+    </div>
+
+    <!-- Color picker modal (for wild cards) -->
+    <div id="color-picker" class="modal hidden">
+      <div class="modal-content color-modal">
+        <h3>Choisis une couleur</h3>
+        <div class="color-choices">
+          <button class="color-btn" data-color="red"></button>
+          <button class="color-btn" data-color="yellow"></button>
+          <button class="color-btn" data-color="green"></button>
+          <button class="color-btn" data-color="blue"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge +4 modal -->
+    <div id="challenge-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Un +4 a été joué contre toi</h3>
+        <p>Veux-tu contester ? Si le joueur n'avait pas de carte légale → il pioche 4. Sinon, tu pioches 6.</p>
+        <div class="modal-buttons">
+          <button id="btn-challenge-yes" class="btn btn-primary">Contester</button>
+          <button id="btn-challenge-no" class="btn btn-secondary">Accepter (+4)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating message toast -->
+    <div id="toast" class="toast hidden"></div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: GAME OVER
+  ========================================================= -->
+  <section id="screen-gameover" class="screen">
+    <div class="panel">
+      <h2 id="gameover-title">Partie terminée</h2>
+      <h3>Classement</h3>
+      <ol id="gameover-scores" class="scores-list"></ol>
+      <div class="gameover-buttons">
+        <button id="btn-rematch" class="btn btn-primary">Rejouer</button>
+        <button id="btn-back-home" class="btn btn-secondary">Menu principal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="js/cards.js"></script>
+  <script src="js/rules.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
