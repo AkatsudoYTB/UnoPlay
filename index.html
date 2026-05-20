@@ -1,0 +1,3183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UnoPlay</title>
+  <style>
+/* =========================================================
+   UNO Online — Stylesheet
+   ========================================================= */
+
+:root {
+  --uno-red:    #e53935;
+  --uno-blue:   #1e88e5;
+  --uno-green:  #43a047;
+  --uno-yellow: #fdd835;
+  --uno-black:  #1a1a1a;
+
+  --bg:         #0e1116;
+  --bg-2:       #161b22;
+  --bg-3:       #21262d;
+  --panel:      #1c2128;
+  --text:       #e6edf3;
+  --text-dim:   #8b949e;
+  --border:     #30363d;
+  --accent:     #f0b400;
+  --danger:     #f85149;
+  --success:    #3fb950;
+
+  --radius:     12px;
+  --radius-sm:  6px;
+  --shadow:     0 10px 30px rgba(0,0,0,.4);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,.3);
+
+  --card-w:     86px;
+  --card-h:     128px;
+  --card-w-sm:  52px;
+  --card-h-sm:  78px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: radial-gradient(ellipse at top, #1b2129 0%, #0a0d12 60%);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body { display: block; }
+
+/* Screens */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 24px;
+  animation: fadeIn 240ms ease;
+}
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================
+   HOME
+   ========================================================= */
+.home-wrap {
+  max-width: 480px;
+  margin: 8vh auto 0;
+  text-align: center;
+}
+.logo {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 0;
+  color: var(--uno-red);
+  text-shadow: 3px 3px 0 var(--uno-yellow), 6px 6px 0 var(--uno-blue);
+}
+.logo-dot { color: var(--uno-green); }
+.tagline {
+  color: var(--text-dim);
+  margin: 12px 0 32px;
+}
+
+.card-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.hint {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.home-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* =========================================================
+   Panels (Create / Join / Lobby / Public / Game over)
+   ========================================================= */
+.panel {
+  max-width: 520px;
+  margin: 6vh auto 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.panel-wide { max-width: 720px; }
+.panel h2 { margin-top: 0; }
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.btn-back:hover { color: var(--text); }
+
+/* Fields */
+.field {
+  display: block;
+  margin: 14px 0;
+}
+.field > span {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.field input, .field select {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--accent);
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.checkbox input { width: 16px; height: 16px; }
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.btn:hover { background: #2a3038; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1a1a;
+}
+.btn-primary:hover { background: #ffc417; }
+.btn-secondary { background: var(--bg-2); }
+.btn-ghost { background: transparent; border-color: var(--border); }
+.btn-large { width: 100%; padding: 14px; margin-top: 14px; }
+.btn-uno {
+  background: var(--uno-red);
+  color: #fff;
+  border-color: var(--uno-red);
+  font-weight: 900;
+  letter-spacing: 2px;
+  font-size: 16px;
+}
+.btn-uno:hover { background: #ff463f; }
+.btn-link {
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 14px;
+}
+.btn-link:hover { color: var(--text); }
+
+.btn-icon {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  width: 34px; height: 34px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.status-line {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-dim);
+  min-height: 18px;
+}
+.status-line.error { color: var(--danger); }
+.status-line.ok    { color: var(--success); }
+
+/* =========================================================
+   Lobby
+   ========================================================= */
+.lobby-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 20px;
+}
+.muted { color: var(--text-dim); }
+.subtle { color: var(--text-dim); font-size: 13px; }
+.room-code {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: .2em;
+}
+.hidden-code { letter-spacing: .35em; }
+
+.players-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.players-list li {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.players-list li.ready { border-color: var(--success); }
+.players-list li.host  { border-color: var(--accent); }
+.player-tags { display: flex; gap: 6px; }
+.tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--bg-3);
+  color: var(--text-dim);
+}
+.tag-host { background: var(--accent); color: #1a1a1a; }
+.tag-ready { background: var(--success); color: #fff; }
+.tag-you { background: var(--uno-blue); color: #fff; }
+
+.kick-btn {
+  background: var(--danger); color: #fff; border: none;
+  border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer;
+}
+
+.lobby-controls {
+  display: flex; gap: 10px; margin-top: 8px;
+}
+.lobby-controls .btn { flex: 1; }
+
+/* Rooms list (public) */
+.rooms-list {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+}
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 24px;
+}
+.room-entry {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.room-entry:hover { border-color: var(--accent); }
+.room-entry-info { display: flex; flex-direction: column; gap: 4px; }
+.room-entry-name { font-weight: 600; }
+.room-entry-meta { font-size: 12px; color: var(--text-dim); }
+
+/* =========================================================
+   GAME BOARD
+   ========================================================= */
+.game-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  margin: -24px -24px 12px;
+}
+.topbar-left, .topbar-right, .topbar-center { display: flex; align-items: center; gap: 10px; }
+.current-color {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  margin-left: 8px;
+}
+.current-color.red    { background: var(--uno-red); }
+.current-color.blue   { background: var(--uno-blue); }
+.current-color.green  { background: var(--uno-green); }
+.current-color.yellow { background: var(--uno-yellow); }
+
+/* Opponents */
+.opponents {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.opponent {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  min-width: 110px;
+  text-align: center;
+  position: relative;
+  transition: border-color .2s, box-shadow .2s;
+}
+.opponent.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(240,180,0,.4);
+}
+.opponent.uno::after {
+  content: "UNO";
+  position: absolute;
+  top: -10px; right: -10px;
+  background: var(--uno-red);
+  color: #fff;
+  font-size: 10px; font-weight: 900;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+.opponent .name { font-size: 13px; font-weight: 600; }
+.opponent .meta { font-size: 11px; color: var(--text-dim); }
+.opponent .opp-cards {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+  min-height: 38px;
+}
+.opp-cards .mini-card {
+  width: 22px; height: 32px;
+  background: var(--uno-black);
+  border: 1.5px solid #fff;
+  border-radius: 3px;
+  margin-left: -10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.4);
+}
+.opp-cards .mini-card:first-child { margin-left: 0; }
+
+/* Board (draw + discard) */
+.board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 24px 0;
+  position: relative;
+}
+.board-center {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.pile {
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+}
+.draw-pile { cursor: pointer; }
+.draw-pile:hover .card-back { transform: translateY(-3px); }
+.pile-count {
+  position: absolute;
+  bottom: -22px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.turn-indicator {
+  margin-top: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 16px;
+  min-height: 22px;
+}
+
+/* Bottom: my hand */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  background: linear-gradient(to top, rgba(10,13,18,.95), rgba(10,13,18,0));
+  padding: 16px 12px 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+}
+.my-hand {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: var(--card-h);
+  max-width: 80vw;
+  overflow-x: auto;
+  padding: 12px 4px;
+}
+.my-hand .card {
+  margin-left: -28px;
+  transition: transform .15s ease, margin-top .15s ease;
+}
+.my-hand .card:first-child { margin-left: 0; }
+.my-hand .card:hover, .my-hand .card.selected {
+  transform: translateY(-14px) scale(1.05);
+  margin-top: -8px;
+  z-index: 5;
+}
+.my-hand .card.unplayable {
+  opacity: .55;
+  filter: grayscale(.4);
+}
+.my-hand .card.unplayable:hover { transform: none; margin-top: 0; }
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+.card {
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 900;
+  user-select: none;
+  cursor: default;
+  border: 4px solid #fff;
+}
+
+.card.red    { background: var(--uno-red); }
+.card.blue   { background: var(--uno-blue); }
+.card.green  { background: var(--uno-green); }
+.card.yellow { background: var(--uno-yellow); color: #1a1a1a; }
+.card.wild   { background: var(--uno-black); }
+
+/* Inner oval typical of UNO */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%/40%;
+  background: rgba(255,255,255,.18);
+  transform: rotate(-30deg);
+}
+
+.card .center {
+  position: relative;
+  font-size: 38px;
+  z-index: 2;
+  line-height: 1;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.25);
+}
+.card .corner-tl, .card .corner-br {
+  position: absolute;
+  font-size: 13px;
+  z-index: 2;
+}
+.card .corner-tl { top: 4px; left: 6px; }
+.card .corner-br {
+  bottom: 4px; right: 6px;
+  transform: rotate(180deg);
+}
+
+/* Special card icons via text */
+.card[data-type="skip"] .center::after,
+.card[data-type="skip"] .corner-tl::after,
+.card[data-type="skip"] .corner-br::after { content: "⊘"; }
+.card[data-type="reverse"] .center::after,
+.card[data-type="reverse"] .corner-tl::after,
+.card[data-type="reverse"] .corner-br::after { content: "⇆"; }
+.card[data-type="draw2"] .center::after,
+.card[data-type="draw2"] .corner-tl::after,
+.card[data-type="draw2"] .corner-br::after { content: "+2"; }
+.card[data-type="wild"] .center::after,
+.card[data-type="wild"] .corner-tl::after,
+.card[data-type="wild"] .corner-br::after { content: "★"; }
+.card[data-type="wild4"] .center::after,
+.card[data-type="wild4"] .corner-tl::after,
+.card[data-type="wild4"] .corner-br::after { content: "+4"; }
+
+.card[data-type="wild"] .center,
+.card[data-type="wild4"] .center {
+  font-size: 30px;
+}
+
+/* Hide content placeholders we don't need */
+.card .center,
+.card .corner-tl,
+.card .corner-br { color: inherit; }
+
+/* Wild card 4-color quadrant ring */
+.card.wild .center {
+  background: conic-gradient(
+    var(--uno-red) 0 25%,
+    var(--uno-yellow) 25% 50%,
+    var(--uno-green) 50% 75%,
+    var(--uno-blue) 75% 100%
+  );
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 24px;
+}
+
+/* Card back */
+.card-back {
+  background: var(--uno-red);
+  display: flex; align-items: center; justify-content: center;
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+.card-back::after {
+  content: "UNO";
+  background: var(--uno-yellow);
+  color: var(--uno-red);
+  padding: 4px 8px;
+  border-radius: 50%/40%;
+  transform: rotate(-20deg);
+  border: 3px solid #fff;
+  font-weight: 900;
+}
+.card-back::before { display: none; }
+
+/* small cards in opponent area not used here; opponents use mini-card */
+
+/* Card animations */
+@keyframes slideToCenter {
+  from { transform: translateY(60vh) scale(.85); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.card.slide-in { animation: slideToCenter 320ms cubic-bezier(.2,.7,.3,1); }
+
+@keyframes drawCard {
+  from { transform: translateX(-120px) rotate(-12deg); opacity: 0; }
+  to   { transform: translateX(0) rotate(0); opacity: 1; }
+}
+.card.draw-anim { animation: drawCard 280ms ease; }
+
+/* Modals */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal.hidden { display: none; }
+.modal-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px;
+  max-width: 380px;
+  box-shadow: var(--shadow);
+}
+.modal-buttons { display: flex; gap: 10px; margin-top: 16px; }
+.modal-buttons .btn { flex: 1; }
+
+/* Color picker */
+.color-modal h3 { margin-top: 0; text-align: center; }
+.color-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.color-btn {
+  width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  border: 3px solid #fff;
+  cursor: pointer;
+  transition: transform .12s;
+}
+.color-btn:hover { transform: scale(1.05); }
+.color-btn[data-color="red"]    { background: var(--uno-red); }
+.color-btn[data-color="yellow"] { background: var(--uno-yellow); }
+.color-btn[data-color="green"]  { background: var(--uno-green); }
+.color-btn[data-color="blue"]   { background: var(--uno-blue); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 200;
+  box-shadow: var(--shadow);
+  animation: toastIn .25s ease;
+}
+.toast.hidden { display: none; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Game over */
+.scores-list {
+  background: var(--bg-2);
+  border-radius: var(--radius-sm);
+  padding: 14px 24px;
+  margin: 12px 0;
+}
+.scores-list li { padding: 6px 0; }
+.gameover-buttons {
+  display: flex; gap: 10px;
+}
+.gameover-buttons .btn { flex: 1; }
+
+/* Utility */
+.hidden { display: none !important; }
+
+/* Mobile tuning */
+@media (max-width: 600px) {
+  :root {
+    --card-w: 64px;
+    --card-h: 96px;
+  }
+  .logo { font-size: 44px; }
+  .players-list { grid-template-columns: 1fr; }
+  .opponents { gap: 8px; }
+  .opponent { min-width: 90px; padding: 6px; }
+  .my-hand .card { margin-left: -34px; }
+  .bottom-bar { flex-wrap: wrap; }
+}
+
+</style>
+  <!-- PeerJS for WebRTC peer-to-peer networking (works on most public WiFi) -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+  <!-- Visible error banner for debugging script issues -->
+  <div id="boot-error" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999; background:#f85149; color:#fff; padding:10px 16px; font-family:monospace; font-size:13px; white-space:pre-wrap;"></div>
+  <script>
+    (function () {
+      function showError(msg) {
+        var el = document.getElementById('boot-error');
+        if (!el) return;
+        el.style.display = 'block';
+        el.textContent = msg;
+      }
+      window.addEventListener('error', function (e) {
+        showError('Erreur JS : ' + (e.message || e.error) + ' (' + (e.filename || '') + ':' + e.lineno + ')');
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        showError('Promesse rejetée : ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+    })();
+  </script>
+
+  <!-- =========================================================
+       SCREEN: HOME
+  ========================================================= -->
+  <section id="screen-home" class="screen active">
+    <div class="home-wrap">
+      <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
+      <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
+
+      <div class="card-panel">
+        <label class="field">
+          <span>Ton pseudo</span>
+          <input id="input-nickname" type="text" maxlength="16" placeholder="Ex : Mathis" autocomplete="off" />
+        </label>
+
+        <div class="home-buttons">
+          <button id="btn-goto-create" class="btn btn-primary">Créer une partie</button>
+          <button id="btn-goto-join" class="btn btn-secondary">Rejoindre via code</button>
+          <button id="btn-goto-public" class="btn btn-ghost">Salons publics</button>
+        </div>
+
+        <p class="hint">
+          Le créateur héberge la partie depuis son navigateur (P2P).
+          Aucun serveur à installer.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: CREATE ROOM
+  ========================================================= -->
+  <section id="screen-create" class="screen">
+    <div class="panel">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Créer une partie</h2>
+
+      <label class="field">
+        <span>Nom du salon</span>
+        <input id="input-room-name" type="text" maxlength="24" placeholder="Salon de Mathis" />
+      </label>
+
+      <label class="checkbox">
+        <input id="input-room-public" type="checkbox" checked />
+        <span>Salon public (visible dans la liste)</span>
+      </label>
+
+      <label class="field">
+        <span>Score gagnant</span>
+        <select id="input-target-score">
+          <option value="200">200 points</option>
+          <option value="500" selected>500 points (officiel)</option>
+          <option value="1000">1000 points</option>
+        </select>
+      </label>
+
+      <label class="checkbox">
+        <input id="input-stacking" type="checkbox" />
+        <span>Règle maison : empilage des +2 et +4</span>
+      </label>
+
+      <button id="btn-create-room" class="btn btn-primary btn-large">Créer le salon</button>
+      <p id="create-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: JOIN BY CODE
+  ========================================================= -->
+  <section id="screen-join" class="screen">
+    <div class="panel">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Rejoindre via code</h2>
+      <label class="field">
+        <span>Code du salon (8 caractères)</span>
+        <input id="input-room-code" type="text" maxlength="8" autocomplete="off"
+               placeholder="AJ5X42SP" style="text-transform:uppercase;letter-spacing:.2em;" />
+      </label>
+      <button id="btn-join-room" class="btn btn-primary btn-large">Rejoindre</button>
+      <p id="join-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: PUBLIC ROOMS
+  ========================================================= -->
+  <section id="screen-public" class="screen">
+    <div class="panel panel-wide">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Salons publics</h2>
+      <p class="subtle">Les salons publics annoncent leur présence via un canal partagé. Si la liste est vide, demande un code à ton hôte.</p>
+      <div id="public-rooms-list" class="rooms-list">
+        <p class="empty-state">Recherche de salons…</p>
+      </div>
+      <button id="btn-refresh-public" class="btn btn-ghost">Rafraîchir</button>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: ROOM LOBBY
+  ========================================================= -->
+  <section id="screen-lobby" class="screen">
+    <div class="panel panel-wide">
+      <button class="btn-back" data-back="home">← Quitter</button>
+      <h2 id="lobby-room-name">Salon</h2>
+
+      <div class="lobby-code-row">
+        <span class="muted">Code :</span>
+        <code id="lobby-room-code" class="room-code hidden-code">••••••••</code>
+        <button id="btn-toggle-code" class="btn-icon" title="Afficher/cacher le code">👁</button>
+        <button id="btn-copy-code" class="btn-icon" title="Copier">📋</button>
+      </div>
+
+      <h3>Joueurs (<span id="lobby-player-count">0</span>/8)</h3>
+      <ul id="lobby-players" class="players-list"></ul>
+
+      <div class="lobby-controls">
+        <button id="btn-ready" class="btn btn-primary">Je suis prêt</button>
+        <button id="btn-start-host" class="btn btn-primary hidden">Lancer la partie</button>
+      </div>
+      <p id="lobby-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: GAME BOARD
+  ========================================================= -->
+  <section id="screen-game" class="screen">
+    <header class="game-topbar">
+      <div class="topbar-left">
+        <span class="muted">Salon :</span> <code id="game-room-code">••••••••</code>
+      </div>
+      <div class="topbar-center">
+        <span id="game-direction">⤵ Sens horaire</span>
+        <span id="game-current-color" class="current-color"></span>
+      </div>
+      <div class="topbar-right">
+        <button id="btn-leave-game" class="btn-link">Quitter</button>
+      </div>
+    </header>
+
+    <div id="opponents" class="opponents"></div>
+
+    <div class="board">
+      <div class="board-center">
+        <div id="draw-pile" class="pile draw-pile" title="Pioche">
+          <div class="card card-back"></div>
+          <span class="pile-count" id="draw-count">0</span>
+        </div>
+        <div id="discard-pile" class="pile discard-pile" title="Talon">
+          <!-- top card injected here -->
+        </div>
+      </div>
+      <div id="turn-indicator" class="turn-indicator"></div>
+    </div>
+
+    <div class="bottom-bar">
+      <button id="btn-uno" class="btn btn-uno">UNO !</button>
+      <div id="my-hand" class="my-hand"></div>
+      <button id="btn-pass" class="btn btn-secondary hidden">Passer mon tour</button>
+    </div>
+
+    <!-- Color picker modal (for wild cards) -->
+    <div id="color-picker" class="modal hidden">
+      <div class="modal-content color-modal">
+        <h3>Choisis une couleur</h3>
+        <div class="color-choices">
+          <button class="color-btn" data-color="red"></button>
+          <button class="color-btn" data-color="yellow"></button>
+          <button class="color-btn" data-color="green"></button>
+          <button class="color-btn" data-color="blue"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge +4 modal -->
+    <div id="challenge-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Un +4 a été joué contre toi</h3>
+        <p>Veux-tu contester ? Si le joueur n'avait pas de carte légale → il pioche 4. Sinon, tu pioches 6.</p>
+        <div class="modal-buttons">
+          <button id="btn-challenge-yes" class="btn btn-primary">Contester</button>
+          <button id="btn-challenge-no" class="btn btn-secondary">Accepter (+4)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating message toast -->
+    <div id="toast" class="toast hidden"></div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN: GAME OVER
+  ========================================================= -->
+  <section id="screen-gameover" class="screen">
+    <div class="panel">
+      <h2 id="gameover-title">Partie terminée</h2>
+      <h3>Classement</h3>
+      <ol id="gameover-scores" class="scores-list"></ol>
+      <div class="gameover-buttons">
+        <button id="btn-rematch" class="btn btn-primary">Rejouer</button>
+        <button id="btn-back-home" class="btn btn-secondary">Menu principal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script>
+/* ===== js/cards.js ===== */
+/* =========================================================
+   UNO Online — Card / Deck module
+   Exposes window.UnoCards
+   =========================================================
+   Card schema:
+     {
+       id:    number    // unique id within a single game
+       color: 'red' | 'blue' | 'green' | 'yellow' | null  (null = wild)
+       type:  'number' | 'skip' | 'reverse' | 'draw2' | 'wild' | 'wild4'
+       value: number | null   // for 'number' cards: 0..9. null otherwise.
+     }
+   When a wild/wild4 is played, the chosen color is stored separately on the
+   game state's `currentColor`, not on the card object itself (the card stays
+   "wild" in the deck for reshuffle purposes).
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  const COLORS = ['red', 'blue', 'green', 'yellow'];
+
+  /**
+   * Build the standard 108-card UNO deck.
+   * Distribution per official rules:
+   *   - 76 number cards: each color has one 0 and two each of 1..9  (4×19 = 76)
+   *   - 24 action cards: 2 Skip, 2 Reverse, 2 Draw Two per color    (4×6  = 24)
+   *   -  4 Wild
+   *   -  4 Wild Draw Four
+   * Total: 108.
+   */
+  function buildDeck() {
+    const deck = [];
+    let id = 0;
+
+    for (const color of COLORS) {
+      // One 0 per color
+      deck.push({ id: id++, color, type: 'number', value: 0 });
+
+      // Two of each 1..9
+      for (let n = 1; n <= 9; n++) {
+        deck.push({ id: id++, color, type: 'number', value: n });
+        deck.push({ id: id++, color, type: 'number', value: n });
+      }
+
+      // Two each of Skip, Reverse, Draw Two
+      for (let i = 0; i < 2; i++) {
+        deck.push({ id: id++, color, type: 'skip',    value: null });
+        deck.push({ id: id++, color, type: 'reverse', value: null });
+        deck.push({ id: id++, color, type: 'draw2',   value: null });
+      }
+    }
+
+    // 4 Wild, 4 Wild Draw Four
+    for (let i = 0; i < 4; i++) {
+      deck.push({ id: id++, color: null, type: 'wild',  value: null });
+      deck.push({ id: id++, color: null, type: 'wild4', value: null });
+    }
+
+    return deck;
+  }
+
+  /**
+   * Fisher–Yates shuffle. Uses provided RNG for deterministic seeding (optional).
+   */
+  function shuffle(arr, rng) {
+    const a = arr.slice();
+    const random = rng || Math.random;
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  /**
+   * Display label for a card (used in toasts / logs).
+   */
+  function label(card) {
+    if (!card) return '?';
+    const colorName = card.color
+      ? ({ red: 'Rouge', blue: 'Bleu', green: 'Vert', yellow: 'Jaune' })[card.color]
+      : '';
+    switch (card.type) {
+      case 'number':  return `${colorName} ${card.value}`;
+      case 'skip':    return `${colorName} Passer`;
+      case 'reverse': return `${colorName} Inversion`;
+      case 'draw2':   return `${colorName} +2`;
+      case 'wild':    return `Joker`;
+      case 'wild4':   return `+4`;
+      default:        return '?';
+    }
+  }
+
+  /**
+   * Point value of a card for end-of-round scoring.
+   */
+  function points(card) {
+    if (card.type === 'number') return card.value;
+    if (card.type === 'wild' || card.type === 'wild4') return 50;
+    return 20; // skip / reverse / draw2
+  }
+
+  /**
+   * Generate an 8-char random room code (A-Z, 0-9 — excluding ambiguous chars).
+   */
+  function generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let out = '';
+    for (let i = 0; i < 8; i++) {
+      out += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return out;
+  }
+
+  window.UnoCards = {
+    COLORS,
+    buildDeck,
+    shuffle,
+    label,
+    points,
+    generateRoomCode
+  };
+})();
+
+
+/* ===== js/rules.js ===== */
+/* =========================================================
+   UNO Online — Rules engine
+   Exposes window.UnoRules
+   =========================================================
+   All functions are PURE w.r.t. the input state where possible.
+   The host runs all rule logic; clients render the resulting state.
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  const { buildDeck, shuffle, points } = window.UnoCards;
+
+  /* ---------------------------------------------------------
+     State factory
+     --------------------------------------------------------- */
+
+  function createGame(players, options) {
+    const opts = Object.assign({
+      targetScore: 500,
+      stacking: false,
+      startingHand: 7
+    }, options || {});
+
+    return {
+      players: players.map(p => ({
+        id: p.id,
+        name: p.name,
+        hand: [],
+        totalScore: 0,
+        calledUno: false,
+        connected: true
+      })),
+      drawPile: [],
+      discardPile: [],
+      currentPlayer: 0,
+      direction: 1,
+      currentColor: null,
+      pendingDraw: 0,
+      status: 'playing',
+      lastAction: null,
+      targetScore: opts.targetScore,
+      stacking: opts.stacking,
+      startingHand: opts.startingHand,
+      pendingChallenge: null,
+      winner: null,
+      roundWinner: null,
+      waitingForDrawDecision: false,
+      lastDrawnCardId: null,
+      unoMissedBy: null
+    };
+  }
+
+  /* ---------------------------------------------------------
+     Round setup
+     --------------------------------------------------------- */
+
+  function startRound(state) {
+    let deck = shuffle(buildDeck());
+    for (const p of state.players) {
+      p.hand = deck.splice(0, state.startingHand);
+      p.calledUno = false;
+    }
+    let top = deck.pop();
+    // Official: if first card is +4, reshuffle and flip again
+    while (top.type === 'wild4') {
+      deck.push(top);
+      deck = shuffle(deck);
+      top = deck.pop();
+    }
+    state.drawPile = deck;
+    state.discardPile = [top];
+    state.currentColor = top.color || 'red';
+    state.direction = 1;
+    state.pendingDraw = 0;
+    state.pendingChallenge = null;
+    state.status = 'playing';
+    state.waitingForDrawDecision = false;
+    state.lastDrawnCardId = null;
+    state.unoMissedBy = null;
+    state.currentPlayer = 0;
+    state.roundWinner = null;
+
+    // Apply initial card effects per official rules
+    if (top.type === 'skip') {
+      state.lastAction = { type: 'firstCardSkip', skipped: state.players[0].id };
+      state.currentPlayer = nextIndex(state, 1);
+    } else if (top.type === 'reverse') {
+      state.direction = -1;
+      state.currentPlayer = state.players.length - 1;
+      state.lastAction = { type: 'firstCardReverse' };
+    } else if (top.type === 'draw2') {
+      drawN(state, 0, 2);
+      state.lastAction = { type: 'firstCardDraw2', target: state.players[0].id };
+      state.currentPlayer = nextIndex(state, 1);
+    } else if (top.type === 'wild') {
+      state.status = 'choosing-color';
+      state.lastAction = { type: 'firstCardWild', chooser: state.players[0].id };
+    }
+    return state;
+  }
+
+  /* ---------------------------------------------------------
+     Turn navigation
+     --------------------------------------------------------- */
+
+  function nextIndex(state, steps) {
+    const n = state.players.length;
+    let idx = state.currentPlayer;
+    let remaining = steps;
+    // Safety: cap at n*2 iterations to avoid infinite loop if all disconnected
+    let safety = n * 4;
+    while (remaining > 0 && safety-- > 0) {
+      idx = (idx + state.direction + n) % n;
+      if (state.players[idx].connected) remaining--;
+    }
+    return idx;
+  }
+
+  /* ---------------------------------------------------------
+     Drawing
+     --------------------------------------------------------- */
+
+  function drawN(state, playerIdx, n) {
+    for (let i = 0; i < n; i++) {
+      ensureDrawPile(state);
+      if (state.drawPile.length === 0) return;
+      const card = state.drawPile.pop();
+      state.players[playerIdx].hand.push(card);
+    }
+  }
+
+  function ensureDrawPile(state) {
+    if (state.drawPile.length > 0) return;
+    if (state.discardPile.length <= 1) return;
+    const top = state.discardPile.pop();
+    state.drawPile = shuffle(state.discardPile);
+    state.discardPile = [top];
+  }
+
+  /* ---------------------------------------------------------
+     Legality
+     --------------------------------------------------------- */
+
+  function canPlay(card, topCard, currentColor, pendingDraw, stacking) {
+    if (pendingDraw > 0 && stacking) {
+      if (topCard.type === 'draw2' && card.type === 'draw2') return true;
+      if (topCard.type === 'wild4' && card.type === 'wild4') return true;
+      return false;
+    }
+    if (pendingDraw > 0 && !stacking) return false;
+    if (card.type === 'wild') return true;
+    if (card.type === 'wild4') return true;
+    if (card.color === currentColor) return true;
+    if (card.type === 'number' && topCard.type === 'number' && card.value === topCard.value) return true;
+    if (card.type === topCard.type && card.type !== 'number') return true;
+    return false;
+  }
+
+  function wasWild4Legal(playerHand, topCardBeforePlay, currentColorBeforePlay, wild4CardId) {
+    for (const c of playerHand) {
+      if (c.id === wild4CardId) continue;
+      if (c.type === 'wild' || c.type === 'wild4') continue;
+      if (c.color === currentColorBeforePlay) return false;
+      if (c.type === 'number' && topCardBeforePlay.type === 'number' && c.value === topCardBeforePlay.value) return false;
+      if (c.type === topCardBeforePlay.type && c.type !== 'number') return false;
+    }
+    return true;
+  }
+
+  /* ---------------------------------------------------------
+     Actions
+     --------------------------------------------------------- */
+
+  function playCard(state, playerId, cardId, chosenColor) {
+    if (state.status !== 'playing') return { ok: false, error: 'Pas en phase de jeu.' };
+    const idx = state.players.findIndex(p => p.id === playerId);
+    if (idx !== state.currentPlayer) return { ok: false, error: "Ce n'est pas ton tour." };
+    const player = state.players[idx];
+    const cardIdx = player.hand.findIndex(c => c.id === cardId);
+    if (cardIdx === -1) return { ok: false, error: 'Carte introuvable.' };
+    const card = player.hand[cardIdx];
+    const top = state.discardPile[state.discardPile.length - 1];
+
+    if (!canPlay(card, top, state.currentColor, state.pendingDraw, state.stacking)) {
+      return { ok: false, error: 'Carte non jouable.' };
+    }
+
+    if ((card.type === 'wild' || card.type === 'wild4') && !chosenColor) {
+      return { ok: false, requiresColor: true };
+    }
+
+    const topBefore = top;
+    const colorBefore = state.currentColor;
+    const handBefore = player.hand.slice();
+
+    // Remove from hand & push to discard
+    player.hand.splice(cardIdx, 1);
+    state.discardPile.push(card);
+    state.lastDrawnCardId = null;
+    state.waitingForDrawDecision = false;
+
+    // UNO miss detection
+    if (player.hand.length === 1 && !player.calledUno) {
+      state.unoMissedBy = player.id;
+    } else {
+      state.unoMissedBy = null;
+    }
+    if (player.hand.length !== 1) player.calledUno = false;
+
+    // Update color
+    if (card.type === 'wild' || card.type === 'wild4') {
+      state.currentColor = chosenColor;
+    } else {
+      state.currentColor = card.color;
+    }
+
+    // Apply effects (BEFORE checking round end so going-out with +2/+4 still applies)
+    let skipNext = false;
+    if (card.type === 'skip') {
+      skipNext = true;
+    } else if (card.type === 'reverse') {
+      state.direction *= -1;
+      if (state.players.length === 2) skipNext = true;
+    } else if (card.type === 'draw2') {
+      if (state.stacking) {
+        state.pendingDraw += 2;
+      } else {
+        const target = nextIndex(state, 1);
+        drawN(state, target, 2);
+        skipNext = true;
+      }
+    } else if (card.type === 'wild4') {
+      state.pendingChallenge = {
+        playerWhoPlayed: player.id,
+        hadOtherPlayable: !wasWild4Legal(handBefore, topBefore, colorBefore, card.id),
+        topBefore: topBefore,
+        colorBefore: colorBefore
+      };
+      if (state.stacking) {
+        state.pendingDraw += 4;
+      } else if (player.hand.length === 0) {
+        // Going out with +4: no challenge phase, apply directly
+        const target = nextIndex(state, 1);
+        drawN(state, target, 4);
+        state.pendingChallenge = null;
+        skipNext = true;
+      } else {
+        // Challenge flow
+        const targetIdx = nextIndex(state, 1);
+        state.pendingDraw = 4;
+        state.status = 'challenge';
+        state.lastAction = {
+          type: 'wild4Played',
+          by: player.id,
+          targetIdx: targetIdx,
+          targetId: state.players[targetIdx].id,
+          chosenColor: chosenColor
+        };
+        return { ok: true, awaitingChallenge: true };
+      }
+    }
+
+    // Round-end check (after effects)
+    if (player.hand.length === 0) {
+      return finishRound(state, player.id);
+    }
+
+    state.lastAction = {
+      type: 'play',
+      by: player.id,
+      card,
+      chosenColor: (card.type === 'wild' || card.type === 'wild4') ? chosenColor : null
+    };
+    state.currentPlayer = nextIndex(state, skipNext ? 2 : 1);
+    return { ok: true };
+  }
+
+  function resolveChallenge(state, challenge) {
+    if (state.status !== 'challenge' || !state.pendingChallenge) {
+      return { ok: false, error: 'Pas de défi en cours.' };
+    }
+    const pc = state.pendingChallenge;
+    const playerIdx = state.players.findIndex(p => p.id === pc.playerWhoPlayed);
+    const targetIdx = nextIndex(state, 1);
+
+    if (challenge) {
+      if (pc.hadOtherPlayable) {
+        drawN(state, playerIdx, 4);
+        state.lastAction = { type: 'challengeWon', against: pc.playerWhoPlayed };
+      } else {
+        drawN(state, targetIdx, 6);
+        state.lastAction = { type: 'challengeLost', against: state.players[targetIdx].id };
+      }
+    } else {
+      drawN(state, targetIdx, 4);
+      state.lastAction = { type: 'wild4Accepted', against: state.players[targetIdx].id };
+    }
+    state.pendingChallenge = null;
+    state.pendingDraw = 0;
+    state.status = 'playing';
+    state.currentPlayer = nextIndex(state, 2);
+    return { ok: true };
+  }
+
+  function drawForCurrentPlayer(state, playerId) {
+    if (state.status !== 'playing') return { ok: false, error: 'Pas en phase de jeu.' };
+    const idx = state.players.findIndex(p => p.id === playerId);
+    if (idx !== state.currentPlayer) return { ok: false, error: "Ce n'est pas ton tour." };
+    if (state.waitingForDrawDecision) return { ok: false, error: 'Tu as déjà pioché.' };
+
+    if (state.pendingDraw > 0) {
+      drawN(state, idx, state.pendingDraw);
+      state.lastAction = { type: 'forcedDraw', by: playerId, n: state.pendingDraw };
+      state.pendingDraw = 0;
+      state.currentPlayer = nextIndex(state, 1);
+      return { ok: true, drawnCard: null, playable: false, forced: true };
+    }
+
+    ensureDrawPile(state);
+    if (state.drawPile.length === 0) {
+      state.currentPlayer = nextIndex(state, 1);
+      return { ok: true, drawnCard: null, playable: false };
+    }
+    const card = state.drawPile.pop();
+    state.players[idx].hand.push(card);
+    state.lastDrawnCardId = card.id;
+
+    const top = state.discardPile[state.discardPile.length - 1];
+    const playable = canPlay(card, top, state.currentColor, state.pendingDraw, state.stacking);
+
+    if (playable) {
+      state.waitingForDrawDecision = true;
+      state.lastAction = { type: 'draw', by: playerId, canPlay: true };
+      return { ok: true, drawnCard: card, playable: true };
+    } else {
+      state.lastAction = { type: 'draw', by: playerId, canPlay: false };
+      state.currentPlayer = nextIndex(state, 1);
+      return { ok: true, drawnCard: card, playable: false };
+    }
+  }
+
+  function passAfterDraw(state, playerId) {
+    if (!state.waitingForDrawDecision) return { ok: false, error: 'Pas de pioche à passer.' };
+    const idx = state.players.findIndex(p => p.id === playerId);
+    if (idx !== state.currentPlayer) return { ok: false, error: "Ce n'est pas ton tour." };
+    state.waitingForDrawDecision = false;
+    state.lastDrawnCardId = null;
+    state.currentPlayer = nextIndex(state, 1);
+    state.lastAction = { type: 'pass', by: playerId };
+    return { ok: true };
+  }
+
+  function callUno(state, playerId) {
+    const p = state.players.find(p => p.id === playerId);
+    if (!p) return { ok: false, error: 'Joueur introuvable.' };
+    p.calledUno = true;
+    state.lastAction = { type: 'unoCalled', by: playerId };
+    if (state.unoMissedBy === playerId) state.unoMissedBy = null;
+    return { ok: true };
+  }
+
+  function catchUno(state, accusedId, accuserId) {
+    if (state.unoMissedBy !== accusedId) {
+      return { ok: false, error: 'Aucune omission UNO valide.' };
+    }
+    const idx = state.players.findIndex(p => p.id === accusedId);
+    if (idx === -1) return { ok: false, error: 'Joueur introuvable.' };
+    drawN(state, idx, 2);
+    state.unoMissedBy = null;
+    state.lastAction = { type: 'unoCaught', by: accuserId, against: accusedId };
+    return { ok: true };
+  }
+
+  /* ---------------------------------------------------------
+     End of round / scoring
+     --------------------------------------------------------- */
+
+  function finishRound(state, winnerId) {
+    state.status = 'round-over';
+    state.roundWinner = winnerId;
+    let totalPoints = 0;
+    for (const p of state.players) {
+      for (const c of p.hand) totalPoints += points(c);
+    }
+    const winner = state.players.find(p => p.id === winnerId);
+    winner.totalScore += totalPoints;
+    state.lastAction = { type: 'roundOver', winner: winnerId, points: totalPoints };
+
+    if (winner.totalScore >= state.targetScore) {
+      state.status = 'game-over';
+      state.winner = winnerId;
+    }
+    return { ok: true, roundOver: true, points: totalPoints };
+  }
+
+  function chooseInitialColor(state, color) {
+    if (state.status !== 'choosing-color') return { ok: false };
+    state.currentColor = color;
+    state.status = 'playing';
+    state.lastAction = { type: 'initialColorChosen', color };
+    return { ok: true };
+  }
+
+  function kickPlayer(state, playerId) {
+    const idx = state.players.findIndex(p => p.id === playerId);
+    if (idx === -1) return { ok: false };
+    state.players[idx].connected = false;
+    state.drawPile = shuffle(state.drawPile.concat(state.players[idx].hand));
+    state.players[idx].hand = [];
+    if (state.currentPlayer === idx) {
+      state.currentPlayer = nextIndex(state, 1);
+    }
+    return { ok: true };
+  }
+
+  /* ---------------------------------------------------------
+     Export
+     --------------------------------------------------------- */
+
+  window.UnoRules = {
+    createGame,
+    startRound,
+    canPlay,
+    playCard,
+    drawForCurrentPlayer,
+    passAfterDraw,
+    callUno,
+    catchUno,
+    resolveChallenge,
+    chooseInitialColor,
+    kickPlayer,
+    finishRound,
+    nextIndex,
+    wasWild4Legal
+  };
+})();
+
+
+/* ===== js/network.js ===== */
+/* =========================================================
+   UNO Online — Networking (PeerJS WebRTC P2P)
+   Exposes window.UnoNet
+   =========================================================
+   Architecture:
+     - Host opens a Peer with id = "unofr-{ROOMCODE}"
+     - Clients open Peers with random ids and connect to host
+     - All game state lives on the host. Clients send actions, receive views.
+
+   Public rooms discovery:
+     - A "directory" peer id ("unofr-directory-v1") is well-known.
+     - First public host claims it (acting as both directory + room host).
+     - Other hosts register their rooms with the directory.
+     - Clients query the directory for the list.
+     - If directory is offline, public rooms is unavailable but join-by-code
+       still works.
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  const ROOM_PEER_PREFIX  = 'unofr-room-';
+  const DIRECTORY_PEER_ID = 'unofr-directory-v1-2026';
+
+  // STUN servers (free, public). Used for NAT traversal on public WiFi.
+  const PEER_CONFIG = {
+    debug: 1,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' }
+      ]
+    }
+  };
+
+  /* =========================================================
+     HOST
+     ========================================================= */
+  class Host extends EventTarget {
+    constructor(roomCode) {
+      super();
+      this.roomCode = roomCode;
+      this.peerId = ROOM_PEER_PREFIX + roomCode;
+      this.peer = null;
+      this.connections = new Map(); // peerId -> { conn, name }
+      this.opened = false;
+    }
+
+    async start() {
+      return new Promise((resolve, reject) => {
+        this.peer = new Peer(this.peerId, PEER_CONFIG);
+        const onOpen = () => {
+          this.opened = true;
+          resolve();
+        };
+        const onError = (err) => {
+          if (err.type === 'unavailable-id') {
+            reject(new Error("Le code est déjà utilisé par un autre salon. Réessaie."));
+          } else if (err.type === 'network' || err.type === 'disconnected') {
+            // Recoverable; let caller decide
+            this.dispatchEvent(new CustomEvent('network-error', { detail: err }));
+          } else if (!this.opened) {
+            reject(err);
+          } else {
+            this.dispatchEvent(new CustomEvent('network-error', { detail: err }));
+          }
+        };
+        this.peer.on('open', onOpen);
+        this.peer.on('error', onError);
+        this.peer.on('connection', (conn) => this._onClientConnect(conn));
+      });
+    }
+
+    _onClientConnect(conn) {
+      conn.on('open', () => {
+        this.connections.set(conn.peer, { conn, name: null });
+        this.dispatchEvent(new CustomEvent('client-connected', { detail: { peerId: conn.peer } }));
+      });
+      conn.on('data', (raw) => {
+        let msg;
+        try { msg = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return; }
+        this.dispatchEvent(new CustomEvent('message', {
+          detail: { peerId: conn.peer, message: msg }
+        }));
+      });
+      conn.on('close', () => {
+        this.connections.delete(conn.peer);
+        this.dispatchEvent(new CustomEvent('client-disconnected', { detail: { peerId: conn.peer } }));
+      });
+      conn.on('error', () => { /* swallow */ });
+    }
+
+    sendTo(peerId, message) {
+      const entry = this.connections.get(peerId);
+      if (entry && entry.conn.open) entry.conn.send(message);
+    }
+
+    broadcast(message, except) {
+      for (const [pid, entry] of this.connections) {
+        if (pid === except) continue;
+        if (entry.conn.open) entry.conn.send(message);
+      }
+    }
+
+    kick(peerId, reason) {
+      const entry = this.connections.get(peerId);
+      if (entry) {
+        try { entry.conn.send({ type: 'kicked', reason }); } catch {}
+        setTimeout(() => { try { entry.conn.close(); } catch {} }, 200);
+      }
+    }
+
+    close() {
+      if (this.peer) {
+        try { this.peer.destroy(); } catch {}
+      }
+      this.connections.clear();
+    }
+  }
+
+  /* =========================================================
+     CLIENT
+     ========================================================= */
+  class Client extends EventTarget {
+    constructor() {
+      super();
+      this.peer = null;
+      this.conn = null;
+      this.connected = false;
+    }
+
+    async connect(roomCode) {
+      const hostPeerId = ROOM_PEER_PREFIX + roomCode;
+      return new Promise((resolve, reject) => {
+        this.peer = new Peer(undefined, PEER_CONFIG);
+        let openHandled = false;
+
+        const timeout = setTimeout(() => {
+          if (!this.connected) reject(new Error("Impossible de se connecter au salon (timeout). Vérifie le code."));
+        }, 15000);
+
+        this.peer.on('open', () => {
+          openHandled = true;
+          const conn = this.peer.connect(hostPeerId, { reliable: true });
+          this.conn = conn;
+
+          conn.on('open', () => {
+            this.connected = true;
+            clearTimeout(timeout);
+            resolve();
+          });
+          conn.on('data', (raw) => {
+            let msg;
+            try { msg = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return; }
+            this.dispatchEvent(new CustomEvent('message', { detail: msg }));
+          });
+          conn.on('close', () => {
+            this.connected = false;
+            this.dispatchEvent(new CustomEvent('disconnected'));
+          });
+          conn.on('error', (err) => {
+            if (!this.connected) {
+              clearTimeout(timeout);
+              reject(new Error("Erreur de connexion. Le salon existe-t-il toujours ?"));
+            }
+          });
+        });
+
+        this.peer.on('error', (err) => {
+          if (err.type === 'peer-unavailable') {
+            clearTimeout(timeout);
+            reject(new Error("Salon introuvable. Vérifie le code."));
+          } else if (!openHandled) {
+            clearTimeout(timeout);
+            reject(err);
+          }
+        });
+      });
+    }
+
+    send(message) {
+      if (this.conn && this.conn.open) this.conn.send(message);
+    }
+
+    close() {
+      if (this.conn) try { this.conn.close(); } catch {}
+      if (this.peer) try { this.peer.destroy(); } catch {}
+    }
+  }
+
+  /* =========================================================
+     DIRECTORY (Public-rooms discovery)
+     ========================================================= */
+  class Directory extends EventTarget {
+    constructor() {
+      super();
+      this.peer = null;
+      this.role = null; // 'server' | 'client' | null
+      this.rooms = new Map(); // roomCode -> { name, players, max, code }
+      this.directoryConn = null; // when client, the connection to directory peer
+      this.clientConnections = new Map(); // when server, peerId -> conn (room hosts/list askers)
+      this.myRoom = null; // when I'm a host publishing my room
+    }
+
+    /**
+     * Try to become the directory server. If it's taken, become a client.
+     */
+    async claimOrConnect() {
+      return new Promise((resolve) => {
+        this.peer = new Peer(DIRECTORY_PEER_ID, PEER_CONFIG);
+        let resolved = false;
+
+        this.peer.on('open', () => {
+          if (resolved) return;
+          resolved = true;
+          this.role = 'server';
+          this._setupServer();
+          resolve('server');
+        });
+
+        this.peer.on('error', (err) => {
+          if (err.type === 'unavailable-id') {
+            // Directory already exists; connect as client
+            try { this.peer.destroy(); } catch {}
+            this._connectAsClient().then(() => {
+              if (!resolved) { resolved = true; resolve('client'); }
+            }).catch(() => {
+              if (!resolved) { resolved = true; resolve(null); }
+            });
+          } else if (!resolved) {
+            resolved = true;
+            resolve(null);
+          }
+        });
+      });
+    }
+
+    _setupServer() {
+      this.peer.on('connection', (conn) => {
+        conn.on('open', () => {
+          this.clientConnections.set(conn.peer, conn);
+        });
+        conn.on('data', (raw) => {
+          let msg;
+          try { msg = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return; }
+          this._onServerMessage(conn, msg);
+        });
+        conn.on('close', () => {
+          this.clientConnections.delete(conn.peer);
+          // If this peer had registered a room, remove it
+          for (const [code, room] of this.rooms) {
+            if (room.ownerPeer === conn.peer) this.rooms.delete(code);
+          }
+        });
+        conn.on('error', () => {});
+      });
+    }
+
+    _onServerMessage(conn, msg) {
+      switch (msg.type) {
+        case 'register':
+          this.rooms.set(msg.room.code, Object.assign({}, msg.room, { ownerPeer: conn.peer }));
+          break;
+        case 'update':
+          if (this.rooms.has(msg.room.code)) {
+            Object.assign(this.rooms.get(msg.room.code), msg.room);
+          }
+          break;
+        case 'unregister':
+          this.rooms.delete(msg.code);
+          break;
+        case 'list':
+          // Don't include `ownerPeer` in the reply
+          const rooms = [...this.rooms.values()].map(r => ({
+            code: r.code, name: r.name, players: r.players, max: r.max
+          }));
+          if (conn.open) conn.send({ type: 'list-reply', rooms });
+          break;
+      }
+    }
+
+    async _connectAsClient() {
+      this.peer = new Peer(undefined, PEER_CONFIG);
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Directory timeout')), 8000);
+        this.peer.on('open', () => {
+          this.directoryConn = this.peer.connect(DIRECTORY_PEER_ID, { reliable: true });
+          this.directoryConn.on('open', () => {
+            this.role = 'client';
+            clearTimeout(timeout);
+            resolve();
+          });
+          this.directoryConn.on('data', (raw) => {
+            let msg;
+            try { msg = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return; }
+            if (msg.type === 'list-reply') {
+              this.dispatchEvent(new CustomEvent('list-reply', { detail: msg.rooms }));
+            }
+          });
+          this.directoryConn.on('error', () => {});
+        });
+        this.peer.on('error', (err) => {
+          if (err.type === 'peer-unavailable') {
+            clearTimeout(timeout);
+            reject(new Error('Directory unavailable'));
+          }
+        });
+      });
+    }
+
+    registerRoom(room) {
+      this.myRoom = room;
+      if (this.role === 'server') {
+        this.rooms.set(room.code, Object.assign({}, room, { ownerPeer: 'self' }));
+      } else if (this.role === 'client' && this.directoryConn) {
+        this.directoryConn.send({ type: 'register', room });
+      }
+    }
+
+    updateRoom(room) {
+      if (this.role === 'server') {
+        if (this.rooms.has(room.code)) Object.assign(this.rooms.get(room.code), room);
+      } else if (this.role === 'client' && this.directoryConn) {
+        this.directoryConn.send({ type: 'update', room });
+      }
+    }
+
+    unregisterRoom(code) {
+      if (this.role === 'server') {
+        this.rooms.delete(code);
+      } else if (this.role === 'client' && this.directoryConn) {
+        this.directoryConn.send({ type: 'unregister', code });
+      }
+      this.myRoom = null;
+    }
+
+    /**
+     * Fetch list of public rooms.
+     */
+    async fetchList(timeoutMs) {
+      if (this.role === 'server') {
+        return [...this.rooms.values()].map(r => ({
+          code: r.code, name: r.name, players: r.players, max: r.max
+        }));
+      }
+      if (this.role !== 'client' || !this.directoryConn) {
+        return [];
+      }
+      return new Promise((resolve) => {
+        const handler = (e) => {
+          this.removeEventListener('list-reply', handler);
+          resolve(e.detail);
+        };
+        this.addEventListener('list-reply', handler);
+        this.directoryConn.send({ type: 'list' });
+        setTimeout(() => {
+          this.removeEventListener('list-reply', handler);
+          resolve([]);
+        }, timeoutMs || 4000);
+      });
+    }
+
+    close() {
+      if (this.peer) try { this.peer.destroy(); } catch {}
+      this.rooms.clear();
+      this.clientConnections.clear();
+    }
+  }
+
+  /* =========================================================
+     EXPORT
+     ========================================================= */
+  window.UnoNet = { Host, Client, Directory, DIRECTORY_PEER_ID, ROOM_PEER_PREFIX };
+})();
+
+
+/* ===== js/ui.js ===== */
+/* =========================================================
+   UNO Online — UI rendering & screen management
+   Exposes window.UnoUI
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  const { label: cardLabel, canPlay } = (function () {
+    return {
+      label: window.UnoCards.label,
+      canPlay: window.UnoRules.canPlay
+    };
+  })();
+
+  /* ---------------------------------------------------------
+     Screen management
+     --------------------------------------------------------- */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById('screen-' + id);
+    if (el) el.classList.add('active');
+  }
+
+  /* ---------------------------------------------------------
+     Toast
+     --------------------------------------------------------- */
+  let toastTimer = null;
+  function toast(msg, duration) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.add('hidden'), duration || 2400);
+  }
+
+  /* ---------------------------------------------------------
+     Card DOM builders
+     --------------------------------------------------------- */
+  function buildCardEl(card, opts) {
+    opts = opts || {};
+    const el = document.createElement('div');
+    el.className = 'card';
+    const color = card.color || 'wild';
+    el.classList.add(color);
+    el.dataset.cardId = card.id;
+    el.dataset.type = card.type;
+    el.dataset.color = card.color || '';
+    el.dataset.value = card.value !== null && card.value !== undefined ? card.value : '';
+
+    const tl = document.createElement('div'); tl.className = 'corner-tl';
+    const ctr = document.createElement('div'); ctr.className = 'center';
+    const br = document.createElement('div'); br.className = 'corner-br';
+
+    if (card.type === 'number') {
+      tl.textContent = card.value;
+      ctr.textContent = card.value;
+      br.textContent = card.value;
+    }
+    // For other types, CSS ::after will render the icon
+
+    el.appendChild(tl);
+    el.appendChild(ctr);
+    el.appendChild(br);
+
+    if (opts.unplayable) el.classList.add('unplayable');
+    if (opts.slideIn)   el.classList.add('slide-in');
+    if (opts.drawAnim)  el.classList.add('draw-anim');
+
+    return el;
+  }
+
+  function buildCardBack() {
+    const el = document.createElement('div');
+    el.className = 'card card-back';
+    return el;
+  }
+
+  /* ---------------------------------------------------------
+     Lobby rendering
+     --------------------------------------------------------- */
+  function renderLobby(state, opts) {
+    const { players, hostId, myId, roomName, roomCode } = state;
+    const isHost = (hostId === myId);
+
+    document.getElementById('lobby-room-name').textContent = roomName || 'Salon';
+    document.getElementById('lobby-player-count').textContent = players.length;
+
+    const codeEl = document.getElementById('lobby-room-code');
+    codeEl.dataset.code = roomCode;
+    if (codeEl.classList.contains('hidden-code')) {
+      codeEl.textContent = '••••••••';
+    } else {
+      codeEl.textContent = roomCode;
+    }
+
+    const list = document.getElementById('lobby-players');
+    list.innerHTML = '';
+    for (const p of players) {
+      const li = document.createElement('li');
+      if (p.ready)        li.classList.add('ready');
+      if (p.id === hostId) li.classList.add('host');
+
+      const name = document.createElement('span');
+      name.textContent = p.name;
+
+      const tags = document.createElement('div');
+      tags.className = 'player-tags';
+      if (p.id === myId)  tags.appendChild(makeTag('Toi', 'tag-you'));
+      if (p.id === hostId) tags.appendChild(makeTag('Hôte', 'tag-host'));
+      if (p.ready)         tags.appendChild(makeTag('Prêt', 'tag-ready'));
+
+      if (isHost && p.id !== myId) {
+        const k = document.createElement('button');
+        k.className = 'kick-btn'; k.textContent = 'Exclure';
+        k.dataset.targetId = p.id;
+        k.addEventListener('click', () => opts.onKick(p.id));
+        tags.appendChild(k);
+      }
+
+      li.appendChild(name);
+      li.appendChild(tags);
+      list.appendChild(li);
+    }
+
+    // Show "Start" button only for host
+    const startBtn = document.getElementById('btn-start-host');
+    if (isHost) startBtn.classList.remove('hidden');
+    else        startBtn.classList.add('hidden');
+
+    // Disable start if <2 players
+    startBtn.disabled = players.length < 2;
+  }
+
+  function makeTag(text, cls) {
+    const t = document.createElement('span');
+    t.className = 'tag ' + (cls || '');
+    t.textContent = text;
+    return t;
+  }
+
+  /* ---------------------------------------------------------
+     Game board rendering
+     --------------------------------------------------------- */
+  function renderGame(view, opts) {
+    /*
+      view: {
+        players: [{ id, name, handCount, calledUno, totalScore, isCurrent, connected }],
+        myId, myHand, hostId,
+        topCard, currentColor,
+        direction (+1/-1),
+        drawPileCount, discardPileCount,
+        currentPlayerId,
+        status,           // 'playing' | 'choosing-color' | 'challenge' | 'round-over' | 'game-over'
+        waitingForDrawDecision,
+        roomCode,
+        pendingDraw,
+        unoMissedBy
+      }
+    */
+    document.getElementById('game-room-code').textContent = view.roomCode || '';
+
+    // Direction indicator
+    const dirEl = document.getElementById('game-direction');
+    dirEl.textContent = view.direction === 1 ? '⤵ Sens horaire' : '⤴ Sens anti-horaire';
+
+    // Current color
+    const colorEl = document.getElementById('game-current-color');
+    colorEl.className = 'current-color ' + (view.currentColor || '');
+
+    // Opponents (everyone except me)
+    const oppRoot = document.getElementById('opponents');
+    oppRoot.innerHTML = '';
+    for (const p of view.players) {
+      if (p.id === view.myId) continue;
+      const opp = document.createElement('div');
+      opp.className = 'opponent';
+      if (p.id === view.currentPlayerId) opp.classList.add('active');
+      if (p.calledUno || p.handCount === 1) opp.classList.add('uno');
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'name';
+      nameEl.textContent = p.name + (!p.connected ? ' (déco)' : '');
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'meta';
+      metaEl.textContent = `${p.handCount} carte${p.handCount > 1 ? 's' : ''} · ${p.totalScore} pts`;
+
+      const cards = document.createElement('div');
+      cards.className = 'opp-cards';
+      const max = Math.min(p.handCount, 7);
+      for (let i = 0; i < max; i++) {
+        const c = document.createElement('div');
+        c.className = 'mini-card';
+        cards.appendChild(c);
+      }
+
+      // Click to "catch" UNO miss
+      if (view.unoMissedBy === p.id) {
+        opp.style.cursor = 'pointer';
+        opp.title = 'Cliquer pour signaler l\'oubli du UNO';
+        opp.addEventListener('click', () => opts.onCatchUno(p.id));
+      }
+
+      opp.appendChild(nameEl);
+      opp.appendChild(metaEl);
+      opp.appendChild(cards);
+      oppRoot.appendChild(opp);
+    }
+
+    // Discard pile (top card)
+    const discard = document.getElementById('discard-pile');
+    discard.innerHTML = '';
+    if (view.topCard) {
+      const c = buildCardEl(view.topCard, { slideIn: true });
+      discard.appendChild(c);
+    }
+
+    // Draw pile count
+    document.getElementById('draw-count').textContent = view.drawPileCount + ' cartes';
+
+    // Turn indicator
+    const turnEl = document.getElementById('turn-indicator');
+    const cur = view.players.find(p => p.id === view.currentPlayerId);
+    if (view.status === 'choosing-color' && view.players[0]?.id === view.myId) {
+      turnEl.textContent = 'Choisis la couleur de départ';
+    } else if (view.status === 'challenge') {
+      turnEl.textContent = view.players.find(p => p.id === view.lastAction?.targetId)?.id === view.myId
+        ? 'On te défie au +4. Contester ?'
+        : `${cur?.name || ''} doit décider du défi`;
+    } else if (cur && cur.id === view.myId) {
+      turnEl.textContent = '— À toi de jouer —';
+    } else {
+      turnEl.textContent = cur ? `Tour de ${cur.name}` : '';
+    }
+
+    // My hand
+    const handEl = document.getElementById('my-hand');
+    handEl.innerHTML = '';
+    const isMyTurn = (view.currentPlayerId === view.myId) && view.status === 'playing';
+    const top = view.topCard;
+    for (const c of view.myHand) {
+      const playable = isMyTurn && top && canPlay(c, top, view.currentColor, view.pendingDraw, view.stacking);
+      const el = buildCardEl(c, { unplayable: !playable });
+      el.addEventListener('click', () => {
+        if (!playable) {
+          toast('Tu ne peux pas jouer cette carte.');
+          return;
+        }
+        opts.onPlayCard(c);
+      });
+      handEl.appendChild(el);
+    }
+
+    // Pass button only if waiting for draw decision
+    const passBtn = document.getElementById('btn-pass');
+    if (view.waitingForDrawDecision && view.currentPlayerId === view.myId) {
+      passBtn.classList.remove('hidden');
+    } else {
+      passBtn.classList.add('hidden');
+    }
+
+    // UNO button visible if I have 2 cards (about to play) or 1 card (validation)
+    const unoBtn = document.getElementById('btn-uno');
+    const myPlayer = view.players.find(p => p.id === view.myId);
+    if (myPlayer && (myPlayer.handCount === 2 || myPlayer.handCount === 1)) {
+      unoBtn.classList.remove('hidden');
+    } else {
+      unoBtn.classList.add('hidden');
+    }
+  }
+
+  /* ---------------------------------------------------------
+     Color picker modal
+     --------------------------------------------------------- */
+  function showColorPicker() {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('color-picker');
+      modal.classList.remove('hidden');
+      const buttons = modal.querySelectorAll('.color-btn');
+      const handler = (e) => {
+        const c = e.currentTarget.dataset.color;
+        buttons.forEach(b => b.removeEventListener('click', handler));
+        modal.classList.add('hidden');
+        resolve(c);
+      };
+      buttons.forEach(b => b.addEventListener('click', handler));
+    });
+  }
+
+  /* ---------------------------------------------------------
+     Challenge modal
+     --------------------------------------------------------- */
+  function showChallengeModal() {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('challenge-modal');
+      modal.classList.remove('hidden');
+      const yes = document.getElementById('btn-challenge-yes');
+      const no  = document.getElementById('btn-challenge-no');
+      const cleanup = (ans) => {
+        yes.removeEventListener('click', onYes);
+        no.removeEventListener('click', onNo);
+        modal.classList.add('hidden');
+        resolve(ans);
+      };
+      const onYes = () => cleanup(true);
+      const onNo  = () => cleanup(false);
+      yes.addEventListener('click', onYes);
+      no.addEventListener('click', onNo);
+    });
+  }
+
+  /* ---------------------------------------------------------
+     Public rooms list
+     --------------------------------------------------------- */
+  function renderPublicRooms(rooms, onJoin) {
+    const root = document.getElementById('public-rooms-list');
+    root.innerHTML = '';
+    if (!rooms || rooms.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'empty-state';
+      p.textContent = 'Aucun salon public pour le moment.';
+      root.appendChild(p);
+      return;
+    }
+    for (const r of rooms) {
+      const div = document.createElement('div');
+      div.className = 'room-entry';
+      div.innerHTML = `
+        <div class="room-entry-info">
+          <span class="room-entry-name"></span>
+          <span class="room-entry-meta"></span>
+        </div>
+        <button class="btn btn-secondary">Rejoindre</button>
+      `;
+      div.querySelector('.room-entry-name').textContent = r.name || 'Salon';
+      div.querySelector('.room-entry-meta').textContent =
+        `Code : ${r.code} · ${r.players}/${r.max} joueurs`;
+      div.querySelector('button').addEventListener('click', () => onJoin(r.code));
+      root.appendChild(div);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     Game-over screen
+     --------------------------------------------------------- */
+  function renderGameOver(view) {
+    const ol = document.getElementById('gameover-scores');
+    ol.innerHTML = '';
+    const sorted = view.players.slice().sort((a, b) => b.totalScore - a.totalScore);
+    for (const p of sorted) {
+      const li = document.createElement('li');
+      li.textContent = `${p.name} — ${p.totalScore} pts`;
+      ol.appendChild(li);
+    }
+    document.getElementById('gameover-title').textContent =
+      view.winner ? `🏆 ${view.winner.name} gagne la partie !` : 'Partie terminée';
+  }
+
+  /* ---------------------------------------------------------
+     EXPORT
+     --------------------------------------------------------- */
+  window.UnoUI = {
+    showScreen,
+    toast,
+    buildCardEl,
+    buildCardBack,
+    renderLobby,
+    renderGame,
+    showColorPicker,
+    showChallengeModal,
+    renderPublicRooms,
+    renderGameOver
+  };
+})();
+
+
+/* ===== js/app.js ===== */
+/* =========================================================
+   UNO Online — App orchestration
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  const { generateRoomCode, label: cardLabel } = window.UnoCards;
+  const Rules = window.UnoRules;
+  const UI    = window.UnoUI;
+  const Net   = window.UnoNet;
+
+  /* ---------------------------------------------------------
+     Persisted nickname
+     --------------------------------------------------------- */
+  const NICK_KEY = 'unofr.nickname';
+  function loadNickname() { try { return localStorage.getItem(NICK_KEY) || ''; } catch { return ''; } }
+  function saveNickname(v) { try { localStorage.setItem(NICK_KEY, v); } catch {} }
+
+  /* ---------------------------------------------------------
+     Global app state
+     --------------------------------------------------------- */
+  const App = {
+    role: null,            // 'host' | 'client'
+    myNickname: '',
+
+    // HOST state:
+    hostNet: null,
+    directory: null,
+    isPublic: false,
+    roomCode: null,
+    roomName: '',
+    targetScore: 500,
+    stacking: false,
+    lobby: {
+      players: [],   // [{ id, peerId, name, ready, connected }] - host included as id 'self'
+      hostId: 'self',
+      status: 'lobby',  // 'lobby' | 'playing' | 'round-over' | 'game-over'
+    },
+    game: null,    // UnoRules game state when started
+
+    // CLIENT state:
+    clientNet: null,
+    clientLastView: null,
+    clientLastLobby: null,
+    clientMyId: null,
+    clientHostId: null,
+  };
+
+  /* =========================================================
+     UTILITIES
+     ========================================================= */
+  function $(id) { return document.getElementById(id); }
+
+  function clearStatus(elId) {
+    const el = $(elId);
+    if (el) { el.textContent = ''; el.className = 'status-line'; }
+  }
+  function setStatus(elId, msg, kind) {
+    const el = $(elId);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'status-line ' + (kind || '');
+  }
+
+  /* =========================================================
+     HOME SCREEN
+     ========================================================= */
+  function initHome() {
+    const nickInput = $('input-nickname');
+    if (!nickInput) {
+      console.error("Élément 'input-nickname' introuvable. Vérifie que index.html est complet.");
+      return;
+    }
+    nickInput.value = loadNickname();
+    App.myNickname = (nickInput.value || '').trim();
+
+    nickInput.addEventListener('input', () => {
+      App.myNickname = nickInput.value.trim();
+      saveNickname(App.myNickname);
+    });
+    // Some mobile keyboards don't fire 'input' reliably; also bind change/blur
+    nickInput.addEventListener('change', () => {
+      App.myNickname = nickInput.value.trim();
+      saveNickname(App.myNickname);
+    });
+
+    // Helper: refresh nickname from input right before navigating
+    function refreshNick() {
+      App.myNickname = nickInput.value.trim();
+      saveNickname(App.myNickname);
+    }
+
+    $('btn-goto-create').addEventListener('click', () => {
+      refreshNick();
+      if (!ensureNickname()) return;
+      UI.showScreen('create');
+    });
+    $('btn-goto-join').addEventListener('click', () => {
+      refreshNick();
+      if (!ensureNickname()) return;
+      UI.showScreen('join');
+    });
+    $('btn-goto-public').addEventListener('click', () => {
+      refreshNick();
+      if (!ensureNickname()) return;
+      UI.showScreen('public');
+      loadPublicRooms();
+    });
+
+    // Back buttons
+    document.querySelectorAll('.btn-back').forEach(b => {
+      b.addEventListener('click', () => {
+        const target = b.dataset.back || 'home';
+        // Clean up any open networking on leaving game/lobby
+        cleanupNetworking();
+        UI.showScreen(target);
+      });
+    });
+  }
+
+  function ensureNickname() {
+    if (!App.myNickname || App.myNickname.length < 2) {
+      UI.toast('Choisis un pseudo (2 caractères min).');
+      $('input-nickname').focus();
+      return false;
+    }
+    return true;
+  }
+
+  function cleanupNetworking() {
+    if (App.hostNet) { try { App.hostNet.close(); } catch {} App.hostNet = null; }
+    if (App.directory) { try { App.directory.close(); } catch {} App.directory = null; }
+    if (App.clientNet) { try { App.clientNet.close(); } catch {} App.clientNet = null; }
+    App.role = null;
+    App.game = null;
+    App.lobby = { players: [], hostId: 'self', status: 'lobby' };
+  }
+
+  /* =========================================================
+     PUBLIC ROOMS BROWSER
+     ========================================================= */
+  async function loadPublicRooms() {
+    const root = $('public-rooms-list');
+    root.innerHTML = '<p class="empty-state">Recherche…</p>';
+    const dir = new Net.Directory();
+    try {
+      const role = await dir.claimOrConnect();
+      if (role === null) {
+        UI.renderPublicRooms([], () => {});
+        dir.close();
+        return;
+      }
+      const rooms = await dir.fetchList(4000);
+      UI.renderPublicRooms(rooms, (code) => {
+        dir.close();
+        joinRoomByCode(code);
+      });
+      // Cleanup after a short delay (in case user clicks)
+      setTimeout(() => { try { dir.close(); } catch {} }, 30000);
+    } catch (err) {
+      console.warn('Directory error:', err);
+      UI.renderPublicRooms([], () => {});
+      try { dir.close(); } catch {}
+    }
+  }
+
+  /* =========================================================
+     CREATE ROOM (HOST)
+     ========================================================= */
+  function initCreate() {
+    $('btn-create-room').addEventListener('click', async () => {
+      const name = $('input-room-name').value.trim() || `Salon de ${App.myNickname}`;
+      const isPublic = $('input-room-public').checked;
+      const targetScore = parseInt($('input-target-score').value, 10) || 500;
+      const stacking = $('input-stacking').checked;
+
+      App.roomName = name;
+      App.isPublic = isPublic;
+      App.targetScore = targetScore;
+      App.stacking = stacking;
+      App.role = 'host';
+
+      // Try a few times in case of code collision
+      setStatus('create-status', 'Création du salon…');
+      let success = false;
+      for (let attempt = 0; attempt < 5 && !success; attempt++) {
+        const code = generateRoomCode();
+        App.roomCode = code;
+        try {
+          App.hostNet = new Net.Host(code);
+          await App.hostNet.start();
+          success = true;
+        } catch (err) {
+          console.warn('Host start error:', err);
+          if (attempt === 4) {
+            setStatus('create-status', 'Impossible de créer le salon : ' + err.message, 'error');
+            App.hostNet = null;
+            return;
+          }
+          // Try a new code
+          App.hostNet = null;
+        }
+      }
+      // Setup host event handlers
+      setupHostEvents();
+
+      // Initialize lobby with host as first player
+      App.lobby = {
+        players: [{
+          id: 'self',
+          peerId: 'self',
+          name: App.myNickname,
+          ready: false,
+          connected: true
+        }],
+        hostId: 'self',
+        status: 'lobby'
+      };
+
+      // Register with directory if public
+      if (isPublic) {
+        App.directory = new Net.Directory();
+        try {
+          await App.directory.claimOrConnect();
+          App.directory.registerRoom({
+            code: App.roomCode,
+            name: App.roomName,
+            players: App.lobby.players.length,
+            max: 8
+          });
+        } catch (err) {
+          console.warn('Directory registration failed:', err);
+        }
+      }
+
+      UI.showScreen('lobby');
+      renderHostLobby();
+    });
+  }
+
+  function setupHostEvents() {
+    App.hostNet.addEventListener('client-connected', (e) => {
+      const peerId = e.detail.peerId;
+      // Wait for their 'join' message
+    });
+    App.hostNet.addEventListener('client-disconnected', (e) => {
+      const peerId = e.detail.peerId;
+      // Remove from lobby OR mark disconnected if mid-game
+      if (App.lobby.status === 'lobby') {
+        App.lobby.players = App.lobby.players.filter(p => p.peerId !== peerId);
+        renderHostLobby();
+        updateDirectory();
+      } else {
+        const p = App.lobby.players.find(p => p.peerId === peerId);
+        if (p) {
+          p.connected = false;
+          if (App.game) {
+            const gp = App.game.players.find(g => g.id === p.id);
+            if (gp) gp.connected = false;
+          }
+          broadcastState();
+        }
+      }
+    });
+    App.hostNet.addEventListener('message', (e) => {
+      onHostMessage(e.detail.peerId, e.detail.message);
+    });
+    App.hostNet.addEventListener('network-error', (e) => {
+      console.warn('Network error:', e.detail);
+    });
+  }
+
+  /* =========================================================
+     HOST: HANDLE INCOMING MESSAGES
+     ========================================================= */
+  function onHostMessage(peerId, msg) {
+    if (!msg || !msg.type) return;
+    switch (msg.type) {
+      case 'join': {
+        if (App.lobby.status !== 'lobby') {
+          App.hostNet.sendTo(peerId, { type: 'error', message: 'Partie déjà en cours.' });
+          App.hostNet.kick(peerId, 'in-progress');
+          return;
+        }
+        if (App.lobby.players.length >= 8) {
+          App.hostNet.sendTo(peerId, { type: 'error', message: 'Salon plein.' });
+          App.hostNet.kick(peerId, 'full');
+          return;
+        }
+        const name = String(msg.name || 'Anonyme').slice(0, 16);
+        const id = peerId; // use peerId as player id
+        App.lobby.players.push({
+          id, peerId, name, ready: false, connected: true
+        });
+        App.hostNet.sendTo(peerId, {
+          type: 'welcome',
+          yourId: id,
+          hostId: App.lobby.hostId,
+          lobby: serializeLobby()
+        });
+        broadcastLobby();
+        updateDirectory();
+        break;
+      }
+      case 'set-ready': {
+        const p = App.lobby.players.find(p => p.peerId === peerId);
+        if (p) { p.ready = !!msg.ready; broadcastLobby(); }
+        break;
+      }
+      case 'action-play': {
+        const player = App.lobby.players.find(p => p.peerId === peerId);
+        if (!player) return;
+        applyAction(player.id, msg);
+        break;
+      }
+      case 'action-draw':
+      case 'action-pass':
+      case 'action-uno':
+      case 'action-catch-uno':
+      case 'action-challenge':
+      case 'action-choose-color': {
+        const player = App.lobby.players.find(p => p.peerId === peerId);
+        if (!player) return;
+        applyAction(player.id, msg);
+        break;
+      }
+      case 'rematch': {
+        const p = App.lobby.players.find(p => p.peerId === peerId);
+        if (p && p.id === App.lobby.hostId) doRematch();
+        break;
+      }
+    }
+  }
+
+  function serializeLobby() {
+    return {
+      roomName: App.roomName,
+      roomCode: App.roomCode,
+      hostId: App.lobby.hostId,
+      players: App.lobby.players.map(p => ({
+        id: p.id, name: p.name, ready: p.ready, connected: p.connected
+      }))
+    };
+  }
+
+  function broadcastLobby() {
+    const lobby = serializeLobby();
+    if (App.hostNet) {
+      App.hostNet.broadcast({ type: 'lobby', lobby });
+    }
+    renderHostLobby();
+    updateDirectory();
+    // Auto-start if all players ready and ≥2
+    const allReady = App.lobby.players.length >= 2 &&
+                     App.lobby.players.every(p => p.id === App.lobby.hostId || p.ready);
+    // Host also needs to be ready
+    const hostPlayer = App.lobby.players.find(p => p.id === App.lobby.hostId);
+    if (allReady && hostPlayer && hostPlayer.ready) {
+      hostStartGame();
+    }
+  }
+
+  function updateDirectory() {
+    if (App.directory && App.isPublic) {
+      App.directory.updateRoom({
+        code: App.roomCode,
+        name: App.roomName,
+        players: App.lobby.players.length,
+        max: 8
+      });
+    }
+  }
+
+  /* =========================================================
+     HOST: LOBBY UI
+     ========================================================= */
+  function renderHostLobby() {
+    UI.renderLobby({
+      players: App.lobby.players,
+      hostId: App.lobby.hostId,
+      myId: 'self',
+      roomName: App.roomName,
+      roomCode: App.roomCode
+    }, {
+      onKick: (targetId) => {
+        const target = App.lobby.players.find(p => p.id === targetId);
+        if (!target || target.id === 'self') return;
+        App.hostNet.kick(target.peerId, 'kicked');
+        App.lobby.players = App.lobby.players.filter(p => p.id !== targetId);
+        broadcastLobby();
+      }
+    });
+  }
+
+  /* =========================================================
+     HOST: START GAME
+     ========================================================= */
+  function hostStartGame() {
+    if (App.lobby.players.length < 2) {
+      UI.toast('Au moins 2 joueurs requis.');
+      return;
+    }
+    App.lobby.status = 'playing';
+    App.game = Rules.createGame(
+      App.lobby.players.map(p => ({ id: p.id, name: p.name })),
+      { targetScore: App.targetScore, stacking: App.stacking }
+    );
+    Rules.startRound(App.game);
+    // Unregister room from public directory once playing
+    if (App.directory && App.isPublic) {
+      App.directory.updateRoom({
+        code: App.roomCode,
+        name: App.roomName + ' (en cours)',
+        players: App.lobby.players.length,
+        max: 8
+      });
+    }
+    App.hostNet.broadcast({ type: 'game-start' });
+    UI.showScreen('game');
+    broadcastState();
+  }
+
+  /* =========================================================
+     HOST: ACTION DISPATCH
+     ========================================================= */
+  function applyAction(playerId, msg) {
+    if (!App.game) return;
+    let result;
+    switch (msg.type) {
+      case 'action-play':
+        result = Rules.playCard(App.game, playerId, msg.cardId, msg.chosenColor);
+        if (!result.ok) {
+          sendErrorTo(playerId, result.error || "Action invalide.");
+          return;
+        }
+        if (result.requiresColor) {
+          sendErrorTo(playerId, "Une couleur est requise pour cette carte.");
+          return;
+        }
+        broadcastState();
+        if (result.awaitingChallenge) {
+          // Inform target client to show challenge modal
+          const target = App.game.players[Rules.nextIndex(App.game, 1)]; // index after the play
+          // After the play that triggered challenge, currentPlayer hasn't moved yet
+          // because we don't advance until challenge resolves. The "target" is
+          // already encoded in lastAction.targetId.
+          const targetId = App.game.lastAction?.targetId;
+          if (targetId) {
+            const targetPeer = peerIdFor(targetId);
+            if (targetPeer === 'self') {
+              promptChallengeLocal();
+            } else if (targetPeer) {
+              App.hostNet.sendTo(targetPeer, { type: 'prompt-challenge' });
+            }
+          }
+        }
+        if (App.game.status === 'round-over' || App.game.status === 'game-over') {
+          handleRoundOver();
+        }
+        break;
+
+      case 'action-draw':
+        result = Rules.drawForCurrentPlayer(App.game, playerId);
+        if (!result.ok) sendErrorTo(playerId, result.error);
+        broadcastState();
+        break;
+
+      case 'action-pass':
+        result = Rules.passAfterDraw(App.game, playerId);
+        if (!result.ok) sendErrorTo(playerId, result.error);
+        broadcastState();
+        break;
+
+      case 'action-uno':
+        Rules.callUno(App.game, playerId);
+        broadcastState();
+        break;
+
+      case 'action-catch-uno':
+        Rules.catchUno(App.game, msg.accusedId, playerId);
+        broadcastState();
+        break;
+
+      case 'action-challenge':
+        result = Rules.resolveChallenge(App.game, !!msg.challenge);
+        if (!result.ok) sendErrorTo(playerId, result.error);
+        broadcastState();
+        if (App.game.status === 'round-over' || App.game.status === 'game-over') {
+          handleRoundOver();
+        }
+        break;
+
+      case 'action-choose-color':
+        Rules.chooseInitialColor(App.game, msg.color);
+        broadcastState();
+        break;
+    }
+  }
+
+  function sendErrorTo(playerId, message) {
+    const peer = peerIdFor(playerId);
+    if (peer === 'self') {
+      UI.toast(message);
+    } else if (peer) {
+      App.hostNet.sendTo(peer, { type: 'notify', message });
+    }
+  }
+
+  function peerIdFor(playerId) {
+    if (playerId === 'self') return 'self';
+    const p = App.lobby.players.find(p => p.id === playerId);
+    return p ? p.peerId : null;
+  }
+
+  function handleRoundOver() {
+    // Auto-start next round after a short delay if not game-over
+    setTimeout(() => {
+      if (App.game.status === 'round-over') {
+        // Continue with same players
+        const activePlayers = App.game.players.map(p => ({ id: p.id, name: p.name }));
+        const scores = {};
+        for (const p of App.game.players) scores[p.id] = p.totalScore;
+        App.game = Rules.createGame(activePlayers, { targetScore: App.targetScore, stacking: App.stacking });
+        for (const p of App.game.players) p.totalScore = scores[p.id] || 0;
+        Rules.startRound(App.game);
+        broadcastState();
+      } else if (App.game.status === 'game-over') {
+        showGameOver();
+      }
+    }, 4000);
+  }
+
+  function showGameOver() {
+    const view = {
+      players: App.game.players.map(p => ({
+        id: p.id, name: p.name, totalScore: p.totalScore
+      })),
+      winner: App.game.players.find(p => p.id === App.game.winner)
+    };
+    if (App.role === 'host') {
+      App.hostNet.broadcast({ type: 'game-over', view });
+    }
+    UI.renderGameOver(view);
+    UI.showScreen('gameover');
+  }
+
+  /* =========================================================
+     HOST: BROADCAST GAME STATE
+     ========================================================= */
+  function buildView(gameState, forPlayerId) {
+    const me = gameState.players.find(p => p.id === forPlayerId);
+    return {
+      roomCode: App.roomCode,
+      players: gameState.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        handCount: p.hand.length,
+        calledUno: p.calledUno,
+        totalScore: p.totalScore,
+        connected: p.connected
+      })),
+      myId: forPlayerId,
+      myHand: me ? me.hand.slice() : [],
+      hostId: App.lobby.hostId,
+      topCard: gameState.discardPile[gameState.discardPile.length - 1] || null,
+      currentColor: gameState.currentColor,
+      direction: gameState.direction,
+      drawPileCount: gameState.drawPile.length,
+      currentPlayerId: gameState.players[gameState.currentPlayer]?.id,
+      status: gameState.status,
+      waitingForDrawDecision: gameState.waitingForDrawDecision,
+      pendingDraw: gameState.pendingDraw,
+      stacking: gameState.stacking,
+      unoMissedBy: gameState.unoMissedBy,
+      lastAction: gameState.lastAction,
+      winnerId: gameState.winner,
+      roundWinner: gameState.roundWinner
+    };
+  }
+
+  function broadcastState() {
+    if (!App.game) return;
+    for (const p of App.lobby.players) {
+      const view = buildView(App.game, p.id);
+      if (p.peerId === 'self') {
+        renderHostGameView(view);
+      } else {
+        App.hostNet.sendTo(p.peerId, { type: 'state', view });
+      }
+    }
+    // If round is over, show a toast on host
+    if (App.game.status === 'round-over') {
+      const winner = App.game.players.find(p => p.id === App.game.roundWinner);
+      UI.toast(`Manche gagnée par ${winner.name} — prochaine manche dans 4s`);
+    } else if (App.game.status === 'game-over') {
+      const winner = App.game.players.find(p => p.id === App.game.winner);
+      UI.toast(`${winner.name} gagne la partie !`);
+    }
+  }
+
+  /* =========================================================
+     HOST: HOST'S OWN GAME UI HANDLING
+     ========================================================= */
+  function renderHostGameView(view) {
+    App.clientLastView = view; // reuse for re-render
+    UI.renderGame(view, makeGameHandlers('host'));
+    // Handle host's own special prompts
+    if (view.status === 'choosing-color' && view.players[0]?.id === 'self') {
+      promptInitialColorLocal();
+    }
+  }
+
+  async function promptInitialColorLocal() {
+    const c = await UI.showColorPicker();
+    applyAction('self', { type: 'action-choose-color', color: c });
+  }
+
+  async function promptChallengeLocal() {
+    const ans = await UI.showChallengeModal();
+    applyAction('self', { type: 'action-challenge', challenge: ans });
+  }
+
+  function doRematch() {
+    // Restart with same players & scores reset to zero
+    App.lobby.status = 'lobby';
+    for (const p of App.lobby.players) p.ready = false;
+    App.game = null;
+    broadcastLobby();
+    UI.showScreen('lobby');
+  }
+
+  /* =========================================================
+     CLIENT: JOIN ROOM
+     ========================================================= */
+  function initJoin() {
+    $('btn-join-room').addEventListener('click', () => {
+      const code = $('input-room-code').value.trim().toUpperCase();
+      if (code.length !== 8) {
+        setStatus('join-status', 'Le code doit faire 8 caractères.', 'error');
+        return;
+      }
+      joinRoomByCode(code);
+    });
+
+    // Auto-uppercase
+    $('input-room-code').addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+  }
+
+  async function joinRoomByCode(code) {
+    if (!ensureNickname()) return;
+    App.role = 'client';
+    App.roomCode = code;
+    setStatus('join-status', 'Connexion au salon…');
+    App.clientNet = new Net.Client();
+    setupClientEvents();
+    try {
+      await App.clientNet.connect(code);
+      App.clientNet.send({ type: 'join', name: App.myNickname });
+      // We expect 'welcome' followed by 'lobby' or 'game-start'
+      UI.showScreen('lobby');
+    } catch (err) {
+      setStatus('join-status', err.message || 'Connexion échouée.', 'error');
+      try { App.clientNet.close(); } catch {}
+      App.clientNet = null;
+    }
+  }
+
+  function setupClientEvents() {
+    App.clientNet.addEventListener('message', (e) => onClientMessage(e.detail));
+    App.clientNet.addEventListener('disconnected', () => {
+      UI.toast("Connexion perdue avec l'hôte.");
+      setTimeout(() => {
+        cleanupNetworking();
+        UI.showScreen('home');
+      }, 1500);
+    });
+  }
+
+  function onClientMessage(msg) {
+    if (!msg || !msg.type) return;
+    switch (msg.type) {
+      case 'welcome':
+        App.clientMyId = msg.yourId;
+        App.clientHostId = msg.hostId;
+        App.clientLastLobby = msg.lobby;
+        UI.showScreen('lobby');
+        renderClientLobby(msg.lobby);
+        break;
+      case 'lobby':
+        App.clientLastLobby = msg.lobby;
+        renderClientLobby(msg.lobby);
+        break;
+      case 'game-start':
+        UI.showScreen('game');
+        break;
+      case 'state':
+        App.clientLastView = msg.view;
+        UI.renderGame(msg.view, makeGameHandlers('client'));
+        if (msg.view.status === 'choosing-color' && msg.view.players[0]?.id === App.clientMyId) {
+          promptInitialColorClient();
+        }
+        if (msg.view.status === 'round-over') {
+          const winner = msg.view.players.find(p => p.id === msg.view.roundWinner);
+          if (winner) UI.toast(`Manche gagnée par ${winner.name}`);
+        }
+        break;
+      case 'prompt-challenge':
+        promptChallengeClient();
+        break;
+      case 'game-over':
+        UI.renderGameOver(msg.view);
+        UI.showScreen('gameover');
+        break;
+      case 'kicked':
+        UI.toast("Tu as été exclu du salon.");
+        setTimeout(() => {
+          cleanupNetworking();
+          UI.showScreen('home');
+        }, 1500);
+        break;
+      case 'notify':
+        UI.toast(msg.message);
+        break;
+      case 'error':
+        UI.toast('Erreur: ' + msg.message);
+        break;
+    }
+  }
+
+  function renderClientLobby(lobby) {
+    UI.renderLobby({
+      players: lobby.players,
+      hostId: lobby.hostId,
+      myId: App.clientMyId,
+      roomName: lobby.roomName,
+      roomCode: lobby.roomCode
+    }, {
+      onKick: () => { /* clients can't kick */ }
+    });
+  }
+
+  async function promptInitialColorClient() {
+    const c = await UI.showColorPicker();
+    App.clientNet.send({ type: 'action-choose-color', color: c });
+  }
+
+  async function promptChallengeClient() {
+    const ans = await UI.showChallengeModal();
+    App.clientNet.send({ type: 'action-challenge', challenge: ans });
+  }
+
+  /* =========================================================
+     GAME HANDLERS (shared between host/client)
+     ========================================================= */
+  function makeGameHandlers(role) {
+    return {
+      onPlayCard: async (card) => {
+        let chosenColor = null;
+        if (card.type === 'wild' || card.type === 'wild4') {
+          chosenColor = await UI.showColorPicker();
+        }
+        if (role === 'host') {
+          applyAction('self', { type: 'action-play', cardId: card.id, chosenColor });
+        } else {
+          App.clientNet.send({ type: 'action-play', cardId: card.id, chosenColor });
+        }
+      },
+      onCatchUno: (accusedId) => {
+        if (role === 'host') {
+          applyAction('self', { type: 'action-catch-uno', accusedId });
+        } else {
+          App.clientNet.send({ type: 'action-catch-uno', accusedId });
+        }
+      }
+    };
+  }
+
+  /* =========================================================
+     LOBBY UI HOOKUPS
+     ========================================================= */
+  function initLobbyControls() {
+    $('btn-ready').addEventListener('click', () => {
+      if (App.role === 'host') {
+        const me = App.lobby.players.find(p => p.id === 'self');
+        if (me) {
+          me.ready = !me.ready;
+          $('btn-ready').textContent = me.ready ? '✓ Prêt' : 'Je suis prêt';
+          broadcastLobby();
+        }
+      } else if (App.role === 'client') {
+        // Toggle local readiness based on last known state
+        const lobby = App.clientLastLobby;
+        if (!lobby) return;
+        const me = lobby.players.find(p => p.id === App.clientMyId);
+        if (me) {
+          const ready = !me.ready;
+          App.clientNet.send({ type: 'set-ready', ready });
+          $('btn-ready').textContent = ready ? '✓ Prêt' : 'Je suis prêt';
+        }
+      }
+    });
+
+    $('btn-start-host').addEventListener('click', () => {
+      if (App.role === 'host') hostStartGame();
+    });
+
+    // Show / hide code
+    $('btn-toggle-code').addEventListener('click', () => {
+      const codeEl = $('lobby-room-code');
+      if (codeEl.classList.contains('hidden-code')) {
+        codeEl.classList.remove('hidden-code');
+        codeEl.textContent = App.roomCode || App.clientLastLobby?.roomCode || '';
+      } else {
+        codeEl.classList.add('hidden-code');
+        codeEl.textContent = '••••••••';
+      }
+    });
+
+    $('btn-copy-code').addEventListener('click', async () => {
+      const code = App.roomCode || App.clientLastLobby?.roomCode || '';
+      try {
+        await navigator.clipboard.writeText(code);
+        UI.toast('Code copié dans le presse-papier');
+      } catch {
+        UI.toast('Code : ' + code);
+      }
+    });
+  }
+
+  /* =========================================================
+     GAME SCREEN INTERACTIONS
+     ========================================================= */
+  function initGameControls() {
+    // Draw pile click
+    $('draw-pile').addEventListener('click', () => {
+      if (App.role === 'host') {
+        applyAction('self', { type: 'action-draw' });
+      } else if (App.role === 'client') {
+        App.clientNet.send({ type: 'action-draw' });
+      }
+    });
+
+    // Pass button
+    $('btn-pass').addEventListener('click', () => {
+      if (App.role === 'host') {
+        applyAction('self', { type: 'action-pass' });
+      } else if (App.role === 'client') {
+        App.clientNet.send({ type: 'action-pass' });
+      }
+    });
+
+    // UNO button
+    $('btn-uno').addEventListener('click', () => {
+      if (App.role === 'host') {
+        applyAction('self', { type: 'action-uno' });
+      } else if (App.role === 'client') {
+        App.clientNet.send({ type: 'action-uno' });
+      }
+    });
+
+    // Leave game
+    $('btn-leave-game').addEventListener('click', () => {
+      if (confirm('Quitter la partie ?')) {
+        cleanupNetworking();
+        UI.showScreen('home');
+      }
+    });
+  }
+
+  function initGameOverControls() {
+    $('btn-back-home').addEventListener('click', () => {
+      cleanupNetworking();
+      UI.showScreen('home');
+    });
+    $('btn-rematch').addEventListener('click', () => {
+      if (App.role === 'host') {
+        doRematch();
+      } else if (App.role === 'client' && App.clientNet) {
+        App.clientNet.send({ type: 'rematch' });
+        UI.toast("Demande de revanche envoyée à l'hôte…");
+      }
+    });
+  }
+
+  function initPublicRoomsControls() {
+    $('btn-refresh-public').addEventListener('click', loadPublicRooms);
+  }
+
+  /* =========================================================
+     BOOTSTRAP
+     ========================================================= */
+  function bootstrap() {
+    try {
+      initHome();
+      initCreate();
+      initJoin();
+      initLobbyControls();
+      initGameControls();
+      initGameOverControls();
+      initPublicRoomsControls();
+    } catch (err) {
+      console.error('Bootstrap error:', err);
+      const banner = document.getElementById('boot-error');
+      if (banner) {
+        banner.style.display = 'block';
+        banner.textContent = 'Erreur au démarrage : ' + (err && err.message ? err.message : err);
+      }
+    }
+  }
+  // Run immediately if DOM is already parsed (this script is at end of body),
+  // otherwise wait for DOMContentLoaded.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
+  }
+
+  /* =========================================================
+     PAGE UNLOAD CLEANUP
+     ========================================================= */
+  window.addEventListener('beforeunload', () => {
+    if (App.directory && App.roomCode) {
+      try { App.directory.unregisterRoom(App.roomCode); } catch {}
+    }
+    cleanupNetworking();
+  });
+})();
+
+  </script>
+</body>
+</html>
