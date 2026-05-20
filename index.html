@@ -3,19 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>UNO Online</title>
+  <title>UnoPlay</title>
   <link rel="stylesheet" href="style.css" />
   <!-- PeerJS for WebRTC peer-to-peer networking (works on most public WiFi) -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
+  <!-- Visible error banner for debugging script issues -->
+  <div id="boot-error" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999; background:#f85149; color:#fff; padding:10px 16px; font-family:monospace; font-size:13px; white-space:pre-wrap;"></div>
+  <script>
+    (function () {
+      function showError(msg) {
+        var el = document.getElementById('boot-error');
+        if (!el) return;
+        el.style.display = 'block';
+        el.textContent = msg;
+      }
+      window.addEventListener('error', function (e) {
+        showError('Erreur JS : ' + (e.message || e.error) + ' (' + (e.filename || '') + ':' + e.lineno + ')');
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        showError('Promesse rejetée : ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+    })();
+  </script>
 
   <!-- =========================================================
        SCREEN: HOME
   ========================================================= -->
   <section id="screen-home" class="screen active">
     <div class="home-wrap">
-      <h1 class="logo">UNO<span class="logo-dot">.</span></h1>
+      <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
       <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
 
       <div class="card-panel">
