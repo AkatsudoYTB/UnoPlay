@@ -67,12 +67,12 @@ body { display: block; }
   text-align: center;
 }
 .logo {
-  font-size: 72px;
+  font-size: 56px;
   font-weight: 900;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
   margin: 0;
   color: var(--uno-red);
-  text-shadow: 4px 4px 0 var(--uno-yellow), 8px 8px 0 var(--uno-blue);
+  text-shadow: 3px 3px 0 var(--uno-yellow), 6px 6px 0 var(--uno-blue);
 }
 .logo-dot { color: var(--uno-green); }
 .tagline {
@@ -679,7 +679,7 @@ body { display: block; }
     --card-w: 64px;
     --card-h: 96px;
   }
-  .logo { font-size: 56px; }
+  .logo { font-size: 44px; }
   .players-list { grid-template-columns: 1fr; }
   .opponents { gap: 8px; }
   .opponent { min-width: 90px; padding: 6px; }
