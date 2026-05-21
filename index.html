@@ -51,8 +51,24 @@ html, body {
 .audio-bar {
   position: fixed;
   top: 8px; right: 8px;
-  display: flex; gap: 6px;
+  display: flex; gap: 10px;
   z-index: 500;
+  background: rgba(22,27,34,0.85);
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+}
+.audio-group { display: flex; align-items: center; gap: 4px; }
+.audio-group input[type="range"] {
+  width: 70px;
+  height: 4px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  .audio-bar { gap: 6px; padding: 4px 6px; top: 4px; right: 4px; }
+  .audio-group input[type="range"] { width: 48px; }
 }
 .btn-icon-sm {
   background: var(--bg-2);
@@ -391,12 +407,13 @@ html, body {
   display: flex; align-items: center; justify-content: center;
 }
 
-/* The classic UNO oval in the middle, rotated */
+/* The classic UNO oval in the middle, rotated, with white outline */
 .card-oval {
   position: absolute;
-  width: 130%; height: 70%;
-  left: -15%; top: 15%;
+  width: 128%; height: 66%;
+  left: -14%; top: 17%;
   background: rgba(255,255,255,0.22);
+  border: 3px solid #fff;
   border-radius: 50%;
   transform: rotate(-22deg);
   pointer-events: none;
@@ -405,13 +422,20 @@ html, body {
 .card-center {
   position: relative;
   z-index: 2;
-  font-size: 40px;
+  font-size: 44px;
   line-height: 1;
   text-shadow: 2px 2px 0 rgba(0,0,0,.35), -2px -2px 0 rgba(0,0,0,.15);
-  transform: rotate(-22deg);
+  /* Number/symbol stays UPRIGHT (no rotation) */
 }
 .card.yellow .card-center { text-shadow: 2px 2px 0 rgba(255,255,255,.4); }
-.card.wild .card-center { transform: none; font-size: 22px; }
+
+/* Wild cards: hide oval, show a big colored wheel instead */
+.card.wild { background: #0d0d0d; }
+.card.wild .card-oval { display: none; }
+.card.wild .card-center { font-size: 26px; }
+.card.wild .card-center .sym-svg { width: 78%; height: auto; max-width: 95%; }
+.card.wild .card-corner { color: #fff; }
+.card.wild .card-corner .sym-svg { width: 22px; height: 22px; }
 
 .card-corner {
   position: absolute;
@@ -428,25 +452,43 @@ html, body {
 .sym-svg.small { width: 16px; height: 16px; }
 .card-center .sym-svg.large { width: 60px; height: 60px; }
 
-/* Card back */
+/* Card back: black with red oval and yellow "UnoPlay" badge */
 .card-back {
-  background: var(--uno-red);
+  background: #0a0a0a;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
+  box-shadow: var(--shadow-sm), inset 0 0 0 4px #fff;
 }
-.card-back .card-inner {
-  background: radial-gradient(ellipse at center, var(--uno-yellow) 0 35%, transparent 36%);
+.card-back .card-inner { position: relative; }
+.card-back .card-inner::before {
+  content: ''; position: absolute;
+  width: 130%; height: 65%;
+  left: -15%; top: 17%;
+  background: var(--uno-red);
+  border-radius: 50%;
+  transform: rotate(-22deg);
+  border: 3px solid #fff;
 }
 .card-back-badge {
-  background: var(--uno-yellow);
-  color: var(--uno-red);
+  position: relative;
+  z-index: 2;
+  color: var(--uno-yellow);
   font-style: italic;
   font-weight: 900;
-  padding: 6px 14px;
-  border-radius: 50%/40%;
-  border: 3px solid #fff;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.6);
   transform: rotate(-22deg);
-  font-size: 14px;
+  font-size: 15px;
+  letter-spacing: .5px;
+}
+.opp-cards .mini-card {
+  width: 24px; height: 34px;
+  background: #0a0a0a;
+  border: 2px solid #fff; border-radius: 4px;
+  margin-left: -10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.4);
+  background-image:
+    radial-gradient(ellipse at center, var(--uno-red) 0 40%, transparent 42%);
+  position: relative;
 }
 
 /* Card animations */
@@ -525,47 +567,7 @@ html, body {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   pointer-events: none;
   z-index: 300;
-  animation: fxFade 1.2s cubic-bezier(.3,.6,.4,1) forwards;
-}
-.fx-svg { width: 220px; height: 220px; filter: drop-shadow(0 6px 18px rgba(0,0,0,.4)); }
-.fx-label {
-  margin-top: 14px; font-size: 36px; font-weight: 900;
-  color: #fff; text-shadow: 0 4px 16px rgba(0,0,0,.6);
-  letter-spacing: 2px;
-}
-.fx-big {
-  font-size: 110px; font-weight: 900; color: #fff;
-  text-shadow: 0 6px 16px rgba(0,0,0,.5);
-}
-@keyframes fxFade {
-  0%   { opacity: 0; transform: scale(.5); }
-  20%  { opacity: 1; transform: scale(1.15); }
-  35%  { transform: scale(1); }
-  85%  { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.05); }
-}
-.fx-skip .fx-svg { animation: fxRotate 1.2s ease; }
-@keyframes fxRotate { from { transform: rotate(-90deg); } to { transform: rotate(0); } }
-.fx-reverse .fx-svg { animation: fxFlip 1.2s ease; }
-@keyframes fxFlip { 0%,100% { transform: rotate(0); } 50% { transform: rotate(180deg); } }
-
-/* Utility */
-.hidden { display: none !important; }
-
-/* MOBILE */
-@media (max-width: 600px) {
-  :root { --card-w: 66px; --card-h: 99px; }
-  .logo { font-size: 44px; }
-  .players-list { grid-template-columns: 1fr; }
-  .opponents { gap: 8px; }
-  .opponent { min-width: 90px; padding: 6px; }
-  .my-hand .card { margin-left: -34px; }
-  .bottom-bar { flex-wrap: wrap; }
-  .lobby-meta-row { flex-direction: column; align-items: flex-start; }
-  .fx-svg { width: 160px; height: 160px; }
-  .fx-big { font-size: 80px; }
-}
-
+  animation: f
 </style>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -588,20 +590,22 @@ html, body {
     })();
   </script>
 
-  <!-- Audio toggle bar (persistent) -->
   <div class="audio-bar">
-    <button id="btn-toggle-sfx" class="btn-icon-sm">🔊 SFX</button>
-    <button id="btn-toggle-music" class="btn-icon-sm">🎵 Musique OFF</button>
+    <div class="audio-group">
+      <button id="btn-toggle-sfx" class="btn-icon-sm">🔊 SFX</button>
+      <input id="slider-master" type="range" min="0" max="100" value="50" title="Volume général" />
+    </div>
+    <div class="audio-group">
+      <button id="btn-toggle-music" class="btn-icon-sm">🎵 OFF</button>
+      <input id="slider-music" type="range" min="0" max="100" value="30" title="Volume musique" />
+    </div>
   </div>
 
-  <!-- =========================================================
-       HOME
-  ========================================================= -->
   <section id="screen-home" class="screen active">
     <div class="home-wrap">
       <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
       <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
-      <p style="font-size:10px;color:#444;margin-top:-8px;">build v4</p>
+      <p style="font-size:10px;color:#444;margin-top:-8px;">build v5</p>
 
       <div class="card-panel">
         <div class="home-buttons">
@@ -617,14 +621,10 @@ html, body {
     </div>
   </section>
 
-  <!-- =========================================================
-       CREATE
-  ========================================================= -->
   <section id="screen-create" class="screen">
     <div class="panel">
       <button class="btn-back" data-back="home">← Retour</button>
       <h2>Créer une partie</h2>
-
       <label class="field">
         <span>Ton pseudo</span>
         <div class="field-row">
@@ -632,25 +632,19 @@ html, body {
           <button id="btn-random-pseudo-create" class="btn-icon" title="Pseudo aléatoire">🎲</button>
         </div>
       </label>
-
       <label class="field">
         <span>Nom du salon</span>
         <input id="input-room-name" type="text" maxlength="28" placeholder="Salon de ..." />
       </label>
-
       <label class="checkbox">
         <input id="input-room-public" type="checkbox" checked />
         <span>Salon public (visible dans la liste)</span>
       </label>
-
       <button id="btn-create-room" class="btn btn-primary btn-large">Créer le salon</button>
       <p id="create-status" class="status-line"></p>
     </div>
   </section>
 
-  <!-- =========================================================
-       JOIN BY CODE
-  ========================================================= -->
   <section id="screen-join" class="screen">
     <div class="panel">
       <button class="btn-back" data-back="home">← Retour</button>
@@ -672,9 +666,6 @@ html, body {
     </div>
   </section>
 
-  <!-- =========================================================
-       PUBLIC ROOMS
-  ========================================================= -->
   <section id="screen-public" class="screen">
     <div class="panel panel-wide">
       <button class="btn-back" data-back="home">← Retour</button>
@@ -687,14 +678,10 @@ html, body {
     </div>
   </section>
 
-  <!-- =========================================================
-       LOBBY
-  ========================================================= -->
   <section id="screen-lobby" class="screen">
     <div class="panel panel-wide">
       <button class="btn-back" data-back="home">← Quitter</button>
       <h2 id="lobby-room-name">Salon</h2>
-
       <div class="lobby-meta-row">
         <div class="lobby-code-row">
           <span class="muted">Code :</span>
@@ -709,29 +696,22 @@ html, body {
           <button id="btn-toggle-visibility" class="btn-icon-sm">Modifier</button>
         </div>
       </div>
-
       <h3>Joueurs (<span id="lobby-player-count">0</span>/8)
         <button id="btn-edit-pseudo" class="btn-icon-sm" style="margin-left:8px;">✏️ Modifier mon pseudo</button>
       </h3>
       <ul id="lobby-players" class="players-list"></ul>
-
       <div class="lobby-controls">
         <button id="btn-ready" class="btn btn-primary">Je suis prêt</button>
         <button id="btn-start-host" class="btn btn-primary" style="display:none;">Lancer la partie</button>
       </div>
-
       <div id="ban-list-section" style="display:none; margin-top:24px;">
         <h3>Joueurs bannis</h3>
         <ul id="ban-list" class="players-list ban-list"></ul>
       </div>
-
       <p id="lobby-status" class="status-line"></p>
     </div>
   </section>
 
-  <!-- =========================================================
-       GAME
-  ========================================================= -->
   <section id="screen-game" class="screen">
     <header class="game-topbar">
       <div class="topbar-left">
@@ -745,9 +725,7 @@ html, body {
         <button id="btn-leave-game" class="btn-link">Quitter</button>
       </div>
     </header>
-
     <div id="opponents" class="opponents"></div>
-
     <div class="board">
       <div class="board-center">
         <div id="draw-pile" class="pile draw-pile" title="Pioche">
@@ -762,13 +740,11 @@ html, body {
       </div>
       <div id="turn-indicator" class="turn-indicator"></div>
     </div>
-
     <div class="bottom-bar">
       <button id="btn-uno" class="btn btn-uno hidden">UNO !</button>
       <div id="my-hand" class="my-hand"></div>
       <button id="btn-pass" class="btn btn-secondary hidden">Passer mon tour</button>
     </div>
-
     <div id="color-picker" class="modal hidden">
       <div class="modal-content color-modal">
         <h3>Choisis une couleur</h3>
@@ -780,7 +756,6 @@ html, body {
         </div>
       </div>
     </div>
-
     <div id="challenge-modal" class="modal hidden">
       <div class="modal-content">
         <h3>Un +4 a été joué contre toi</h3>
@@ -791,13 +766,9 @@ html, body {
         </div>
       </div>
     </div>
-
     <div id="toast" class="toast hidden"></div>
   </section>
 
-  <!-- =========================================================
-       GAME OVER (final ranking)
-  ========================================================= -->
   <section id="screen-gameover" class="screen">
     <div class="panel">
       <h2 id="gameover-title">Partie terminée</h2>
@@ -809,9 +780,7 @@ html, body {
       </div>
     </div>
   </section>
-
-  <!-- Scripts -->
-  <script>
+    <script>
 /* ===== js/cards.js ===== */
 /* =========================================================
    UnoPlay — Cards / Deck / Utilities
@@ -1773,28 +1742,46 @@ html, body {
   function symbolFor(card, size) {
     if (card.type === 'number') return String(card.value);
     if (card.type === 'skip') {
+      // Cleaner forbidden sign — thicker stroke, wider angle
+      const sw = size === 'large' ? 13 : 11;
       return `<svg viewBox="0 0 100 100" class="sym-svg ${size}">
-        <circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="10"/>
-        <line x1="22" y1="22" x2="78" y2="78" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="${sw}"/>
+        <line x1="24" y1="76" x2="76" y2="24" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round"/>
       </svg>`;
     }
     if (card.type === 'reverse') {
       return `<svg viewBox="0 0 100 100" class="sym-svg ${size}">
-        <path d="M25 30 L25 60 L18 60 L34 78 L50 60 L43 60 L43 35 Z" fill="currentColor"/>
-        <path d="M75 70 L75 40 L82 40 L66 22 L50 40 L57 40 L57 65 Z" fill="currentColor"/>
+        <path d="M28 30 L28 60 L20 60 L36 80 L52 60 L44 60 L44 32 Z" fill="currentColor"/>
+        <path d="M72 70 L72 40 L80 40 L64 20 L48 40 L56 40 L56 68 Z" fill="currentColor"/>
       </svg>`;
     }
     if (card.type === 'draw2') return '+2';
     if (card.type === 'wild') {
-      return `<svg viewBox="0 0 100 100" class="sym-svg ${size}">
-        <circle cx="50" cy="50" r="38" fill="#e53935"/>
-        <path d="M50 12 A 38 38 0 0 1 88 50 L50 50 Z" fill="#fdd835"/>
-        <path d="M50 50 L88 50 A 38 38 0 0 1 50 88 Z" fill="#43a047"/>
-        <path d="M12 50 L50 50 L50 88 A 38 38 0 0 1 12 50 Z" fill="#1e88e5"/>
-      </svg>`;
+      // Four-color quadrant wheel
+      return wildWheelSVG(size);
     }
-    if (card.type === 'wild4') return '+4';
+    if (card.type === 'wild4') {
+      // Wheel with +4 overlay
+      return wildWheelSVG(size, '+4');
+    }
     return '?';
+  }
+
+  function wildWheelSVG(size, overlay) {
+    const r = 38;
+    const overlayHtml = overlay
+      ? `<text x="50" y="62" text-anchor="middle" font-size="36" font-weight="900"
+              fill="#fff" stroke="#000" stroke-width="2" paint-order="stroke">${overlay}</text>`
+      : '';
+    return `<svg viewBox="0 0 100 100" class="sym-svg ${size}">
+      <circle cx="50" cy="50" r="${r+2}" fill="#fff"/>
+      <path d="M50 50 L50 ${50-r} A ${r} ${r} 0 0 1 ${50+r} 50 Z" fill="#fdd835"/>
+      <path d="M50 50 L${50+r} 50 A ${r} ${r} 0 0 1 50 ${50+r} Z" fill="#43a047"/>
+      <path d="M50 50 L50 ${50+r} A ${r} ${r} 0 0 1 ${50-r} 50 Z" fill="#1e88e5"/>
+      <path d="M50 50 L${50-r} 50 A ${r} ${r} 0 0 1 50 ${50-r} Z" fill="#e53935"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="#000" stroke-width="2" opacity=".25"/>
+      ${overlayHtml}
+    </svg>`;
   }
 
   function buildCardBack() {
@@ -2037,9 +2024,8 @@ html, body {
       'hidden', !(view.waitingForDrawDecision && view.currentPlayerId === view.myId)
     );
     const unoBtn = document.getElementById('btn-uno');
-    unoBtn.classList.toggle('hidden',
-      !myPlayer || iAmFinished || (myPlayer.handCount !== 2 && myPlayer.handCount !== 1)
-    );
+    // UNO call: only available when down to 1 card (per user request)
+    unoBtn.classList.toggle('hidden', !myPlayer || iAmFinished || myPlayer.handCount !== 1);
   }
 
   /* =========================================================
@@ -2283,52 +2269,97 @@ html, body {
       this._tone(900, 0.04, 'square', 0.1);
     },
 
-    /* --- Background music: simple ambient loop --- */
+    /* --- Background music: richer multi-instrument loop --- */
+    _musicTimer: null,
+    _musicChordIdx: 0,
+    _musicBarIdx: 0,
     startMusic() {
       if (this.musicOn) return;
       this.init();
       if (!this.enabled) return;
       this.musicOn = true;
-      this._scheduleMusicTick();
+      this._musicChordIdx = 0;
+      this._musicBarIdx = 0;
+      this._scheduleMusicBar();
     },
     stopMusic() {
       this.musicOn = false;
-      // Kill all scheduled music nodes
+      if (this._musicTimer) { clearTimeout(this._musicTimer); this._musicTimer = null; }
       for (const n of this.musicNodes) try { n.stop(); } catch {}
       this.musicNodes = [];
     },
-    _scheduleMusicTick() {
+    _voice(freq, when, dur, type, vol, attack) {
+      const t0 = when;
+      const osc = this.ctx.createOscillator();
+      const g   = this.ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(vol, t0 + (attack || 0.05));
+      g.gain.exponentialRampToValueAtTime(0.0005, t0 + dur);
+      osc.connect(g); g.connect(this.musicGain);
+      osc.start(t0); osc.stop(t0 + dur + 0.05);
+      this.musicNodes.push(osc);
+    },
+    _scheduleMusicBar() {
       if (!this.musicOn || !this.ctx) return;
-      const t = this.ctx.currentTime;
-      // Simple progression: I-vi-IV-V in C major, gentle pads
-      const chords = [
-        [261.63, 329.63, 392.00],   // C
-        [220.00, 261.63, 329.63],   // Am
-        [174.61, 220.00, 261.63],   // F
-        [196.00, 246.94, 293.66]    // G
+      const t0 = this.ctx.currentTime + 0.02;
+
+      // Chord progression: I - V - vi - IV (C major: C, G, Am, F)
+      // Each chord = one bar = 2.0 seconds (≈120 BPM, 4 beats of 0.5s)
+      const PROGRESSION = [
+        { root: 130.81, third: 164.81, fifth: 196.00, name: 'C',  scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25] },
+        { root: 196.00, third: 246.94, fifth: 293.66, name: 'G',  scale: [293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33] },
+        { root: 220.00, third: 261.63, fifth: 329.63, name: 'Am', scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33] },
+        { root: 174.61, third: 220.00, fifth: 261.63, name: 'F',  scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33] }
       ];
-      const beat = 1.6;
-      const chord = chords[Math.floor(Math.random() * chords.length)];
-      for (const f of chord) {
-        const osc = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(f, t);
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.07, t + 0.4);
-        g.gain.exponentialRampToValueAtTime(0.001, t + beat);
-        osc.connect(g); g.connect(this.musicGain);
-        osc.start(t); osc.stop(t + beat + 0.05);
-        this.musicNodes.push(osc);
+      const chord = PROGRESSION[this._musicChordIdx % PROGRESSION.length];
+      this._musicChordIdx++;
+      this._musicBarIdx++;
+      const bar = 2.0;
+      const beat = bar / 4;
+
+      // ---- Bass: root on beats 1 & 3, fifth on beats 2 & 4
+      this._voice(chord.root,   t0,             beat * 1.2, 'sawtooth', 0.10, 0.01);
+      this._voice(chord.fifth/2,t0 + beat,      beat * 1.0, 'sawtooth', 0.08, 0.01);
+      this._voice(chord.root,   t0 + beat * 2,  beat * 1.2, 'sawtooth', 0.10, 0.01);
+      this._voice(chord.fifth/2,t0 + beat * 3,  beat * 1.0, 'sawtooth', 0.08, 0.01);
+
+      // ---- Pad: sustained chord notes throughout the bar
+      this._voice(chord.root  * 2, t0, bar, 'sine',     0.05, 0.3);
+      this._voice(chord.third * 2, t0, bar, 'sine',     0.045, 0.3);
+      this._voice(chord.fifth * 2, t0, bar, 'sine',     0.045, 0.3);
+      this._voice(chord.root  * 4, t0, bar, 'triangle', 0.025, 0.4);
+
+      // ---- Arpeggio: 8 sixteenth notes through the chord
+      const arpNotes = [chord.root*2, chord.third*2, chord.fifth*2, chord.root*4,
+                        chord.fifth*2, chord.third*2, chord.root*2, chord.third*2];
+      for (let i = 0; i < 8; i++) {
+        this._voice(arpNotes[i], t0 + i * (bar / 8), bar / 8 * 0.9, 'triangle', 0.045, 0.005);
       }
-      this.musicNodes = this.musicNodes.slice(-30);
-      setTimeout(() => this._scheduleMusicTick(), beat * 1000);
+
+      // ---- Lead melody: 2-4 notes per bar from the scale
+      const numLeadNotes = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < numLeadNotes; i++) {
+        const noteFreq = chord.scale[Math.floor(Math.random() * chord.scale.length)];
+        const noteStart = t0 + (i / numLeadNotes) * bar + Math.random() * (bar / 8);
+        const noteDur = (bar / numLeadNotes) * 0.7;
+        this._voice(noteFreq, noteStart, noteDur, 'square', 0.04, 0.02);
+      }
+
+      // ---- Soft kick on beat 1
+      this._voice(60, t0, 0.12, 'square', 0.18, 0.005);
+
+      this.musicNodes = this.musicNodes.slice(-200);
+      this._musicTimer = setTimeout(() => this._scheduleMusicBar(), bar * 1000);
     },
 
     setMusicVolume(v) {
+      this.init();
       if (this.musicGain) this.musicGain.gain.value = v;
     },
     setMasterVolume(v) {
+      this.init();
       if (this.masterGain) this.masterGain.gain.value = v;
     }
   };
@@ -2367,6 +2398,8 @@ html, body {
      --------------------------------------------------------- */
   const NICK_KEY = 'unoplay.nickname';
   const BAN_KEY  = 'unoplay.banlist';
+  const BANNED_FROM_KEY = 'unoplay.bannedFromRooms';
+  const VOL_KEY = 'unoplay.volumes';
   function loadNickname() { try { return localStorage.getItem(NICK_KEY) || ''; } catch { return ''; } }
   function saveNickname(v) { try { localStorage.setItem(NICK_KEY, v); } catch {} }
   function loadBanList() {
@@ -2375,6 +2408,23 @@ html, body {
   function saveBanList(arr) {
     try { localStorage.setItem(BAN_KEY, JSON.stringify(arr)); } catch {}
   }
+  function loadBannedFrom() {
+    try { return JSON.parse(localStorage.getItem(BANNED_FROM_KEY) || '[]'); } catch { return []; }
+  }
+  function addBannedFrom(code) {
+    if (!code) return;
+    const arr = loadBannedFrom();
+    if (!arr.includes(code)) {
+      arr.push(code);
+      try { localStorage.setItem(BANNED_FROM_KEY, JSON.stringify(arr)); } catch {}
+    }
+  }
+  function loadVolumes() {
+    try {
+      return Object.assign({ master: 0.5, music: 0.3 }, JSON.parse(localStorage.getItem(VOL_KEY) || '{}'));
+    } catch { return { master: 0.5, music: 0.3 }; }
+  }
+  function saveVolumes(v) { try { localStorage.setItem(VOL_KEY, JSON.stringify(v)); } catch {} }
 
   /* ---------------------------------------------------------
      App state
@@ -3106,6 +3156,9 @@ html, body {
         break;
       case 'kicked':
         UI.toast(msg.reason === 'banned' ? "Tu as été banni du salon." : "Tu as été exclu du salon.", { error: true });
+        if (msg.reason === 'banned' && App.roomCode) {
+          addBannedFrom(App.roomCode);
+        }
         setTimeout(() => { cleanupNetworking(); UI.showScreen('home'); }, 1500);
         break;
       case 'notify':
@@ -3156,7 +3209,10 @@ html, body {
       const role = await dir.claimOrConnect();
       if (role === null) { UI.renderPublicRooms([], () => {}); dir.close(); return; }
       const rooms = await dir.fetchList(4000);
-      UI.renderPublicRooms(rooms, (code) => {
+      // Filter out rooms this user has been banned from
+      const banned = loadBannedFrom();
+      const filtered = rooms.filter(r => !banned.includes(r.code));
+      UI.renderPublicRooms(filtered, (code) => {
         dir.close();
         // Prompt for pseudo before joining
         const pseudo = prompt('Ton pseudo pour rejoindre ce salon :', loadNickname() || suggestPseudo());
@@ -3327,9 +3383,23 @@ html, body {
   function initAudioControls() {
     const sfx = $('btn-toggle-sfx');
     const music = $('btn-toggle-music');
+    const masterSlider = $('slider-master');
+    const musicSlider  = $('slider-music');
+
+    // Restore saved volumes
+    const vols = loadVolumes();
+    if (masterSlider) {
+      masterSlider.value = Math.round(vols.master * 100);
+      UI.Audio.setMasterVolume(vols.master);
+    }
+    if (musicSlider) {
+      musicSlider.value = Math.round(vols.music * 100);
+      UI.Audio.setMusicVolume(vols.music);
+    }
+
     function updateBtns() {
       sfx.textContent = UI.Audio.enabled ? '🔊 SFX' : '🔇 SFX';
-      music.textContent = UI.Audio.musicOn ? '🎵 Musique ON' : '🎵 Musique OFF';
+      music.textContent = UI.Audio.musicOn ? '🎵 ON' : '🎵 OFF';
     }
     sfx.addEventListener('click', () => {
       UI.Audio.enabled = !UI.Audio.enabled;
@@ -3340,6 +3410,16 @@ html, body {
       if (UI.Audio.musicOn) UI.Audio.stopMusic();
       else UI.Audio.startMusic();
       updateBtns();
+    });
+    if (masterSlider) masterSlider.addEventListener('input', () => {
+      const v = parseInt(masterSlider.value, 10) / 100;
+      UI.Audio.setMasterVolume(v);
+      const cur = loadVolumes(); cur.master = v; saveVolumes(cur);
+    });
+    if (musicSlider) musicSlider.addEventListener('input', () => {
+      const v = parseInt(musicSlider.value, 10) / 100;
+      UI.Audio.setMusicVolume(v);
+      const cur = loadVolumes(); cur.music = v; saveVolumes(cur);
     });
     updateBtns();
   }
