@@ -461,13 +461,15 @@ html, body {
 }
 .card-back .card-inner { position: relative; }
 .card-back .card-inner::before {
+  /* Bigger red oval, closer to real UNO card back */
   content: ''; position: absolute;
-  width: 130%; height: 65%;
-  left: -15%; top: 17%;
+  width: 150%; height: 82%;
+  left: -25%; top: 9%;
   background: var(--uno-red);
   border-radius: 50%;
   transform: rotate(-22deg);
-  border: 3px solid #fff;
+  border: 4px solid #fff;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.15);
 }
 .card-back-badge {
   position: relative;
@@ -475,9 +477,9 @@ html, body {
   color: var(--uno-yellow);
   font-style: italic;
   font-weight: 900;
-  text-shadow: 2px 2px 0 rgba(0,0,0,.6);
+  text-shadow: 3px 3px 0 rgba(0,0,0,.55), -1px -1px 0 rgba(0,0,0,.35);
   transform: rotate(-22deg);
-  font-size: 15px;
+  font-size: 18px;
   letter-spacing: .5px;
 }
 .opp-cards .mini-card {
@@ -716,6 +718,42 @@ html, body {
   font-weight: 600;
 }
 
+/* =========================================================
+   v8 — "Your turn" overlay
+   ========================================================= */
+.fx-overlay.fx-your-turn .fx-big {
+  font-size: 92px;
+  color: var(--accent);
+  text-shadow: 0 6px 24px rgba(240,180,0,.6);
+  letter-spacing: 4px;
+  animation: yourTurnGlow 0.9s ease-out;
+}
+.fx-overlay.fx-your-turn .fx-label {
+  color: #fff;
+  margin-top: 8px;
+  letter-spacing: 4px;
+}
+@keyframes yourTurnGlow {
+  0%   { transform: scale(.5) rotate(-3deg); opacity: 0; }
+  50%  { transform: scale(1.15) rotate(2deg); opacity: 1; text-shadow: 0 0 60px rgba(240,180,0,1); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+#game-room-name {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 200px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 </style>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -753,7 +791,7 @@ html, body {
     <div class="home-wrap">
       <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
       <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
-      <p style="font-size:10px;color:#444;margin-top:-8px;">build v6</p>
+      <p style="font-size:10px;color:#444;margin-top:-8px;">build v8</p>
 
       <div class="card-panel">
         <div class="home-buttons">
@@ -864,7 +902,7 @@ html, body {
   <section id="screen-game" class="screen">
     <header class="game-topbar">
       <div class="topbar-left">
-        <span class="muted">Salon :</span> <code id="game-room-code">••••••••</code>
+        <span class="muted">Salon :</span> <span id="game-room-name">—</span>
       </div>
       <div class="topbar-center">
         <span id="game-direction">⤵ Sens horaire</span>
@@ -1871,8 +1909,8 @@ html, body {
         </div>`;
       root.appendChild(wrap);
       const cleanup = (val) => { root.removeChild(wrap); resolve(val); };
-      wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => cleanup(false));
-      wrap.querySelector('[data-act="ok"]').addEventListener('click', () => cleanup(true));
+      wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => { Audio.back(); cleanup(false); });
+      wrap.querySelector('[data-act="ok"]').addEventListener('click', () => { Audio.click(); cleanup(true); });
     });
   }
 
@@ -1903,11 +1941,12 @@ html, body {
         const v = input.value.trim();
         if (opts.validate) {
           const r = opts.validate(v);
-          if (!r.ok) { errEl.textContent = r.error || 'Invalide.'; return; }
+          if (!r.ok) { errEl.textContent = r.error || 'Invalide.'; Audio.error(); return; }
         }
+        Audio.click();
         cleanup(v);
       };
-      wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => cleanup(null));
+      wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => { Audio.back(); cleanup(null); });
       wrap.querySelector('[data-act="ok"]').addEventListener('click', submit);
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
     });
@@ -1927,7 +1966,7 @@ html, body {
           </div>
         </div>`;
       root.appendChild(wrap);
-      wrap.querySelector('[data-act="ok"]').addEventListener('click', () => { root.removeChild(wrap); resolve(); });
+      wrap.querySelector('[data-act="ok"]').addEventListener('click', () => { Audio.click(); root.removeChild(wrap); resolve(); });
     });
   }
 
@@ -2167,7 +2206,9 @@ html, body {
      GAME BOARD RENDERING
      ========================================================= */
   function renderGame(view, opts) {
-    document.getElementById('game-room-code').textContent = view.roomCode || '';
+    // Show room NAME in game (not the code, per user request)
+    const nameEl = document.getElementById('game-room-name');
+    if (nameEl) nameEl.textContent = view.roomName || 'Partie en cours';
     const dirEl = document.getElementById('game-direction');
     dirEl.textContent = view.direction === 1 ? '⤵ Sens horaire' : '⤴ Sens anti-horaire';
 
@@ -2236,6 +2277,12 @@ html, body {
     const myPlayer = view.players.find(p => p.id === view.myId);
     const iAmFinished = !!myPlayer?.finishedRank;
     const isMyTurn = (view.currentPlayerId === view.myId) && view.status === 'playing' && !iAmFinished;
+    // Detect transition: just became my turn → play sound + overlay
+    if (isMyTurn && !_lastIsMyTurn) {
+      showYourTurnOverlay();
+      Audio.yourTurn();
+    }
+    _lastIsMyTurn = isMyTurn;
     const top = view.topCard;
     for (const c of view.myHand) {
       const playable = isMyTurn && top && Rules.canPlay(c, top, view.currentColor, view.pendingDraw);
@@ -2286,6 +2333,7 @@ html, body {
       const buttons = modal.querySelectorAll('.color-btn');
       const handler = (e) => {
         const c = e.currentTarget.dataset.color;
+        Audio.click();
         buttons.forEach(b => b.removeEventListener('click', handler));
         modal.classList.add('hidden');
         resolve(c);
@@ -2309,8 +2357,8 @@ html, body {
         modal.classList.add('hidden');
         resolve(ans);
       };
-      const onYes = () => cleanup(true);
-      const onNo  = () => cleanup(false);
+      const onYes = () => { Audio.click(); cleanup(true); };
+      const onNo  = () => { Audio.back();  cleanup(false); };
       yes.addEventListener('click', onYes);
       no.addEventListener('click', onNo);
     });
@@ -2414,6 +2462,15 @@ html, body {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1100);
   }
+  function showYourTurnOverlay() {
+    const el = document.createElement('div');
+    el.className = 'fx-overlay fx-your-turn';
+    el.innerHTML = `<div class="fx-big">À TOI !</div><div class="fx-label">C'est ton tour</div>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1400);
+  }
+  function resetTurnTracker() { _lastIsMyTurn = false; }
+  let _lastIsMyTurn = false;
 
   /* =========================================================
      SOUND ENGINE
@@ -2441,9 +2498,13 @@ html, body {
       lose:        'lose.mp3',
       error:       'error.mp3',
       roomCreated: 'room_created.mp3',
-      music:       'music.mp3'
+      countdown:   'countdown.mp3',
+      yourTurn:    'your_turn.mp3'
+      // music files (music.mp3, music2.mp3, ..., music10.mp3) loaded separately
     },
     files: {},  // name -> HTMLAudioElement, or false if failed
+    musicFiles: [],   // HTMLAudioElement[] (only successfully loaded ones)
+    _currentMusic: null,
     _filesAttempted: false,
 
     init() {
@@ -2462,15 +2523,70 @@ html, body {
       if (!this._filesAttempted) {
         this._filesAttempted = true;
         for (const [name, fn] of Object.entries(this.filenames)) this._tryLoad(name, fn);
+        // Music files: music.mp3, music2.mp3, ..., music10.mp3
+        for (let i = 1; i <= 10; i++) {
+          const fn = i === 1 ? 'music.mp3' : 'music' + i + '.mp3';
+          this._tryLoadMusic(fn);
+        }
       }
+    },
+    _tryLoadMusic(filename) {
+      try {
+        const a = new window.Audio('audios/' + filename);
+        a.preload = 'auto';
+        const markLoaded = () => {
+          if (!this.musicFiles.includes(a)) {
+            this.musicFiles.push(a);
+            a.addEventListener('ended', () => this._playNextMusic());
+            try { console.log('[UnoPlay] Music loaded: audios/' + filename); } catch {}
+          }
+        };
+        a.addEventListener('loadeddata',     markLoaded);
+        a.addEventListener('canplay',        markLoaded);
+        a.addEventListener('canplaythrough', markLoaded);
+        // music files are optional; silently ignore errors
+        a.load();
+      } catch {}
+    },
+    _playNextMusic() {
+      if (!this.musicOn) return;
+      if (this.musicFiles.length === 0) return;
+      if (this._currentMusic) {
+        try { this._currentMusic.pause(); this._currentMusic.currentTime = 0; } catch {}
+      }
+      // Pick a random track, prefer one different from the previous one
+      let idx = Math.floor(Math.random() * this.musicFiles.length);
+      if (this.musicFiles.length > 1 && this.musicFiles[idx] === this._currentMusic) {
+        idx = (idx + 1) % this.musicFiles.length;
+      }
+      this._currentMusic = this.musicFiles[idx];
+      this._currentMusic.volume = Math.max(0, Math.min(1, this.musicVolume));
+      this._currentMusic.loop = false;
+      try {
+        this._currentMusic.currentTime = 0;
+        const p = this._currentMusic.play();
+        if (p && p.catch) p.catch((err) => { try { console.warn('[UnoPlay] Music play rejected:', err); } catch {} });
+      } catch (e) { try { console.warn('[UnoPlay] Music play threw:', e); } catch {} }
     },
 
     _tryLoad(name, filename) {
       try {
         const a = new window.Audio('audios/' + filename);
         a.preload = 'auto';
-        a.addEventListener('canplaythrough', () => { this.files[name] = a; }, { once: true });
-        a.addEventListener('error', () => { this.files[name] = false; }, { once: true });
+        const markLoaded = () => {
+          if (this.files[name] !== a) {
+            this.files[name] = a;
+            try { console.log('[UnoPlay] Audio loaded: audios/' + filename); } catch {}
+          }
+        };
+        // Several events because some browsers/servers fire different ones first
+        a.addEventListener('loadeddata',     markLoaded);
+        a.addEventListener('canplay',        markLoaded);
+        a.addEventListener('canplaythrough', markLoaded);
+        a.addEventListener('error', (e) => {
+          this.files[name] = false;
+          try { console.warn('[UnoPlay] Audio failed: audios/' + filename, e && e.target && e.target.error); } catch {}
+        }, { once: true });
         a.load();
       } catch { this.files[name] = false; }
     },
@@ -2503,6 +2619,8 @@ html, body {
     lose()        { this._play('lose',        () => { const t = this.ctx.currentTime; [400, 320, 250].forEach((f, i) => this._sTone(f, 0.25, 'sine', 0.25, 0, t + i * 0.15)); }); },
     error()       { this._play('error',       () => { this._sTone(220, 0.08, 'square', 0.22); this._sTone(160, 0.12, 'square', 0.22, 0.06); }); },
     roomCreated() { this._play('roomCreated', () => { const t = this.ctx.currentTime; [523, 659, 880].forEach((f, i) => this._sTone(f, 0.14, 'triangle', 0.28, 0, t + i * 0.08)); }); },
+    countdown()   { this._play('countdown',   () => { this._sTone(660, 0.08, 'square', 0.2); }); },
+    yourTurn()    { this._play('yourTurn',    () => { const t = this.ctx.currentTime; this._sTone(659, 0.10, 'triangle', 0.3, 0, t); this._sTone(880, 0.16, 'triangle', 0.3, 0, t + 0.09); }); },
 
     _sTone(freq, dur, type, vol, delay, when) {
       if (!this.ctx) return;
@@ -2538,22 +2656,30 @@ html, body {
       if (this.musicOn) return;
       this.init();
       this.musicOn = true;
-      const file = this.files.music;
-      if (file && file !== false) {
-        try {
-          file.loop = true;
-          file.volume = Math.max(0, Math.min(1, this.musicVolume));
-          file.play().catch(() => this._synthMusicStart());
-        } catch { this._synthMusicStart(); }
-      } else {
-        this._synthMusicStart();
+      if (this.musicFiles.length > 0) {
+        this._playNextMusic();
+        return;
       }
+      // No files loaded yet — start synth, retry file shortly
+      this._synthMusicStart();
+      const retry = () => {
+        if (!this.musicOn) return;
+        if (this.musicFiles.length > 0) {
+          for (const n of this.musicNodes) try { n.stop(); } catch {}
+          this.musicNodes = [];
+          if (this._musicTimer) { clearTimeout(this._musicTimer); this._musicTimer = null; }
+          this._playNextMusic();
+        } else {
+          setTimeout(retry, 1500);
+        }
+      };
+      setTimeout(retry, 1500);
     },
     stopMusic() {
       this.musicOn = false;
-      const file = this.files.music;
-      if (file && file !== false) {
-        try { file.pause(); file.currentTime = 0; } catch {}
+      if (this._currentMusic) {
+        try { this._currentMusic.pause(); this._currentMusic.currentTime = 0; } catch {}
+        this._currentMusic = null;
       }
       if (this._musicTimer) { clearTimeout(this._musicTimer); this._musicTimer = null; }
       for (const n of this.musicNodes) try { n.stop(); } catch {}
@@ -2625,8 +2751,10 @@ html, body {
       this.musicVolume = v;
       this.init();
       if (this.musicGain) this.musicGain.gain.value = v;
-      const f = this.files.music;
-      if (f && f !== false) f.volume = Math.max(0, Math.min(1, v));
+      // Apply to all loaded music files
+      for (const m of this.musicFiles) {
+        try { m.volume = Math.max(0, Math.min(1, v)); } catch {}
+      }
     }
   };
 
@@ -2643,6 +2771,7 @@ html, body {
     renderPublicRooms, renderGameOver,
     showSkipOverlay, showReverseOverlay,
     showDraw2Overlay, showDraw4Overlay, showUnoCallOverlay,
+    showYourTurnOverlay, resetTurnTracker,
     Audio
   };
 })();
@@ -3016,7 +3145,7 @@ html, body {
     App.countdownValue = 5;
     App.hostNet.broadcast({ type: 'countdown', n: App.countdownValue });
     UI.showCountdown(App.countdownValue);
-    UI.Audio.click();
+    UI.Audio.countdown();
     App.countdownInterval = setInterval(() => {
       App.countdownValue--;
       if (App.countdownValue <= 0) {
@@ -3026,7 +3155,7 @@ html, body {
       } else {
         App.hostNet.broadcast({ type: 'countdown', n: App.countdownValue });
         UI.showCountdown(App.countdownValue);
-        UI.Audio.click();
+        UI.Audio.countdown();
       }
     }, 1000);
   }
@@ -3037,6 +3166,7 @@ html, body {
     App.game = Rules.createGame(App.lobby.players.map(p => ({ id: p.id, name: p.name })));
     Rules.startRound(App.game);
     if (App.directory && App.isPublic) { try { App.directory.unregisterRoom(App.roomCode); } catch {} }
+    UI.resetTurnTracker();
     App.hostNet.broadcast({ type: 'game-start' });
     UI.showScreen('game');
     broadcastState();
@@ -3158,6 +3288,7 @@ html, body {
     const me = gameState.players.find(p => p.id === forPlayerId);
     return {
       roomCode: App.roomCode,
+      roomName: App.roomName,
       players: gameState.players.map(p => ({
         id: p.id, name: p.name, handCount: p.hand.length,
         calledUno: p.calledUno, finishedRank: p.finishedRank, connected: p.connected
@@ -3302,9 +3433,9 @@ html, body {
         if (App.clientLastLobby) { App.clientLastLobby.roomCode = msg.code; renderClientLobby(App.clientLastLobby); }
         UI.toast(`Code du salon : ${msg.code}`);
         break;
-      case 'countdown':       UI.showCountdown(msg.n); UI.Audio.click(); break;
+      case 'countdown':       UI.showCountdown(msg.n); UI.Audio.countdown(); break;
       case 'countdown-cancel': UI.cancelCountdown(); break;
-      case 'game-start':      UI.hideCountdown(); UI.showScreen('game'); break;
+      case 'game-start':      UI.hideCountdown(); UI.resetTurnTracker(); UI.showScreen('game'); break;
       case 'state':
         App.clientLastView = msg.view;
         UI.renderGame(msg.view, makeGameHandlers('client'));
@@ -3353,15 +3484,27 @@ html, body {
   async function loadPublicRooms() {
     const root = $('public-rooms-list');
     root.innerHTML = '<p class="empty-state">Recherche…</p>';
-    const dir = new Net.Directory();
+    // If we already own a Directory (because we're hosting publicly),
+    // reuse it instead of opening a second connection — otherwise the
+    // two Directory peers in the same browser tab fight over the same
+    // global ID and the room can vanish.
+    let dir, ownsDir = false;
+    if (App.directory) {
+      dir = App.directory;
+    } else {
+      dir = new Net.Directory();
+      ownsDir = true;
+      try {
+        const role = await dir.claimOrConnect();
+        if (role === null) { UI.renderPublicRooms([], () => {}); dir.close(); return; }
+      } catch { UI.renderPublicRooms([], () => {}); try { dir.close(); } catch {} return; }
+    }
     try {
-      const role = await dir.claimOrConnect();
-      if (role === null) { UI.renderPublicRooms([], () => {}); dir.close(); return; }
       const rooms = await dir.fetchList(4000);
       const banned = loadBannedFrom();
       const filtered = rooms.filter(r => !banned.includes(r.code));
       UI.renderPublicRooms(filtered, async (code) => {
-        dir.close();
+        if (ownsDir) { try { dir.close(); } catch {} }
         const pseudo = await UI.showPrompt({
           title: 'Ton pseudo', message: 'Avec quel pseudo veux-tu rejoindre ?',
           value: loadNickname() || suggestPseudo(), maxLength: 16,
@@ -3371,8 +3514,11 @@ html, body {
         App.myNickname = pseudo.trim(); saveNickname(App.myNickname);
         joinRoomByCode(code);
       });
-      setTimeout(() => { try { dir.close(); } catch {} }, 30000);
-    } catch { UI.renderPublicRooms([], () => {}); try { dir.close(); } catch {} }
+      if (ownsDir) setTimeout(() => { try { dir.close(); } catch {} }, 30000);
+    } catch {
+      UI.renderPublicRooms([], () => {});
+      if (ownsDir) try { dir.close(); } catch {}
+    }
   }
 
   function makeGameHandlers(role) {
@@ -3424,6 +3570,7 @@ html, body {
       }
     });
     $('btn-copy-code').addEventListener('click', async () => {
+      UI.Audio.click();
       const code = App.roomCode || App.clientLastLobby?.roomCode || '';
       try { await navigator.clipboard.writeText(code); UI.toast('Code copié', { success: true }); }
       catch { UI.toast('Code : ' + code); }
@@ -3431,17 +3578,27 @@ html, body {
     $('btn-regenerate-code').addEventListener('click', () => {
       if (App.role === 'host') rotateCode();
     });
-    $('btn-toggle-visibility').addEventListener('click', () => {
+    $('btn-toggle-visibility').addEventListener('click', async () => {
       if (App.role !== 'host') return;
       UI.Audio.click();
       App.isPublic = !App.isPublic;
-      if (App.isPublic && !App.directory) {
-        App.directory = new Net.Directory();
-        App.directory.claimOrConnect().then(() => {
-          App.directory.registerRoom({ code: App.roomCode, name: App.roomName, players: App.lobby.players.length, max: 8 });
-        }).catch(() => {});
-      } else if (!App.isPublic && App.directory) {
-        try { App.directory.unregisterRoom(App.roomCode); } catch {}
+      if (App.isPublic) {
+        // Going public: ensure directory connection, then ALWAYS (re-)register.
+        if (!App.directory) {
+          App.directory = new Net.Directory();
+          try { await App.directory.claimOrConnect(); } catch {}
+        }
+        try {
+          App.directory.registerRoom({
+            code: App.roomCode, name: App.roomName,
+            players: App.lobby.players.length, max: 8
+          });
+        } catch {}
+      } else {
+        // Going private: unregister but keep directory connection alive.
+        if (App.directory) {
+          try { App.directory.unregisterRoom(App.roomCode); } catch {}
+        }
       }
       broadcastLobby();
     });
@@ -3544,6 +3701,7 @@ html, body {
       updateBtns();
     });
     music.addEventListener('click', () => {
+      UI.Audio.click();
       if (UI.Audio.musicOn) UI.Audio.stopMusic();
       else UI.Audio.startMusic();
       updateBtns();
