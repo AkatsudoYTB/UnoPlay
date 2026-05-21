@@ -567,7 +567,155 @@ html, body {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   pointer-events: none;
   z-index: 300;
-  animation: f
+  animation: fxFade 1.2s cubic-bezier(.3,.6,.4,1) forwards;
+}
+.fx-svg { width: 220px; height: 220px; filter: drop-shadow(0 6px 18px rgba(0,0,0,.4)); }
+.fx-label {
+  margin-top: 14px; font-size: 36px; font-weight: 900;
+  color: #fff; text-shadow: 0 4px 16px rgba(0,0,0,.6);
+  letter-spacing: 2px;
+}
+.fx-big {
+  font-size: 110px; font-weight: 900; color: #fff;
+  text-shadow: 0 6px 16px rgba(0,0,0,.5);
+}
+@keyframes fxFade {
+  0%   { opacity: 0; transform: scale(.5); }
+  20%  { opacity: 1; transform: scale(1.15); }
+  35%  { transform: scale(1); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+.fx-skip .fx-svg { animation: fxRotate 1.2s ease; }
+@keyframes fxRotate { from { transform: rotate(-90deg); } to { transform: rotate(0); } }
+.fx-reverse .fx-svg { animation: fxFlip 1.2s ease; }
+@keyframes fxFlip { 0%,100% { transform: rotate(0); } 50% { transform: rotate(180deg); } }
+
+/* Utility */
+.hidden { display: none !important; }
+
+/* MOBILE */
+@media (max-width: 600px) {
+  :root { --card-w: 66px; --card-h: 99px; }
+  .logo { font-size: 44px; }
+  .players-list { grid-template-columns: 1fr; }
+  .opponents { gap: 8px; }
+  .opponent { min-width: 90px; padding: 6px; }
+  .my-hand .card { margin-left: -34px; }
+  .bottom-bar { flex-wrap: wrap; }
+  .lobby-meta-row { flex-direction: column; align-items: flex-start; }
+  .fx-svg { width: 160px; height: 160px; }
+  .fx-big { font-size: 80px; }
+}
+
+/* =========================================================
+   v6 — Countdown overlay
+   ========================================================= */
+.countdown-overlay {
+  position: fixed; inset: 0;
+  display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  background: rgba(0,0,0,.7);
+  z-index: 400;
+  backdrop-filter: blur(4px);
+}
+.countdown-number {
+  font-size: 180px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 8px 24px rgba(240,180,0,.5);
+  line-height: 1;
+}
+.countdown-label {
+  font-size: 22px;
+  color: #fff;
+  margin-top: 16px;
+  letter-spacing: 2px;
+}
+.countdown-overlay.pop .countdown-number {
+  animation: countdownPop 350ms ease;
+}
+@keyframes countdownPop {
+  0%   { transform: scale(.6); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.countdown-overlay.cancel-shake .countdown-number { color: var(--danger); }
+.countdown-overlay.cancel-shake {
+  animation: cancelShake 600ms ease;
+}
+@keyframes cancelShake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* =========================================================
+   v6 — Wild card centering fix (.wild-wheel)
+   ========================================================= */
+.card.wild .card-oval { display: none; }
+.card .wild-wheel {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.card .wild-wheel .wild-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.card.wild .card-corner { color: #fff; }
+.card.wild .card-corner svg { width: 18px; height: 18px; }
+.card.wild .card-corner.tl svg, .card.wild .card-corner.br svg {
+  /* Make corner wheels smaller circle indicators */
+  display: block;
+}
+
+/* =========================================================
+   v6 — In-site modals (confirm/prompt/alert)
+   ========================================================= */
+.app-modal { z-index: 600; }
+.app-modal .modal-content {
+  min-width: 320px;
+  max-width: 420px;
+}
+.app-modal .modal-input {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  margin-top: 8px;
+}
+.app-modal .modal-input:focus { border-color: var(--accent); }
+.app-modal p { color: var(--text-dim); margin: 4px 0 8px; }
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover { background: #ff5d56; }
+
+.toast.toast-success {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+  font-weight: 600;
+}
+
 </style>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -605,7 +753,7 @@ html, body {
     <div class="home-wrap">
       <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
       <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
-      <p style="font-size:10px;color:#444;margin-top:-8px;">build v5</p>
+      <p style="font-size:10px;color:#444;margin-top:-8px;">build v6</p>
 
       <div class="card-panel">
         <div class="home-buttons">
@@ -682,6 +830,7 @@ html, body {
     <div class="panel panel-wide">
       <button class="btn-back" data-back="home">← Quitter</button>
       <h2 id="lobby-room-name">Salon</h2>
+      <button id="btn-edit-room-name" class="btn-icon-sm" style="margin-bottom:8px; display:none;">✏️ Modifier le nom</button>
       <div class="lobby-meta-row">
         <div class="lobby-code-row">
           <span class="muted">Code :</span>
@@ -1661,7 +1810,7 @@ html, body {
 
 /* ===== js/ui.js ===== */
 /* =========================================================
-   UnoPlay — UI rendering, animations, sounds
+   UnoPlay — UI rendering, animations, sounds (v6)
    Exposes window.UnoUI
    ========================================================= */
 
@@ -1687,10 +1836,127 @@ html, body {
     opts = opts || {};
     const el = document.getElementById('toast');
     el.textContent = msg;
-    el.className = 'toast' + (opts.error ? ' toast-error' : '');
+    el.className = 'toast' + (opts.error ? ' toast-error' : (opts.success ? ' toast-success' : ''));
     el.classList.remove('hidden');
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.add('hidden'), opts.duration || 2200);
+  }
+
+  /* =========================================================
+     GENERIC IN-SITE MODALS (confirm / prompt / alert)
+     ========================================================= */
+  function ensureModalRoot() {
+    let root = document.getElementById('app-modal-root');
+    if (!root) {
+      root = document.createElement('div');
+      root.id = 'app-modal-root';
+      document.body.appendChild(root);
+    }
+    return root;
+  }
+
+  function showConfirm(opts) {
+    return new Promise((resolve) => {
+      const root = ensureModalRoot();
+      const wrap = document.createElement('div');
+      wrap.className = 'modal app-modal';
+      wrap.innerHTML = `
+        <div class="modal-content">
+          <h3>${opts.title || 'Confirmation'}</h3>
+          <p>${opts.message || ''}</p>
+          <div class="modal-buttons">
+            <button class="btn btn-secondary" data-act="cancel">${opts.cancelLabel || 'Annuler'}</button>
+            <button class="btn ${opts.danger ? 'btn-danger' : 'btn-primary'}" data-act="ok">${opts.okLabel || 'Confirmer'}</button>
+          </div>
+        </div>`;
+      root.appendChild(wrap);
+      const cleanup = (val) => { root.removeChild(wrap); resolve(val); };
+      wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => cleanup(false));
+      wrap.querySelector('[data-act="ok"]').addEventListener('click', () => cleanup(true));
+    });
+  }
+
+  function showPrompt(opts) {
+    return new Promise((resolve) => {
+      const root = ensureModalRoot();
+      const wrap = document.createElement('div');
+      wrap.className = 'modal app-modal';
+      const maxlen = opts.maxLength || 28;
+      wrap.innerHTML = `
+        <div class="modal-content">
+          <h3>${opts.title || ''}</h3>
+          <p>${opts.message || ''}</p>
+          <input type="text" class="modal-input" maxlength="${maxlen}" />
+          <p class="modal-error" style="color:#f85149; font-size:13px; min-height:18px; margin:6px 0 0;"></p>
+          <div class="modal-buttons">
+            <button class="btn btn-secondary" data-act="cancel">Annuler</button>
+            <button class="btn btn-primary" data-act="ok">Valider</button>
+          </div>
+        </div>`;
+      root.appendChild(wrap);
+      const input = wrap.querySelector('.modal-input');
+      const errEl = wrap.querySelector('.modal-error');
+      input.value = opts.value || '';
+      setTimeout(() => input.focus(), 50);
+      const cleanup = (val) => { root.removeChild(wrap); resolve(val); };
+      const submit = () => {
+        const v = input.value.trim();
+        if (opts.validate) {
+          const r = opts.validate(v);
+          if (!r.ok) { errEl.textContent = r.error || 'Invalide.'; return; }
+        }
+        cleanup(v);
+      };
+      wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => cleanup(null));
+      wrap.querySelector('[data-act="ok"]').addEventListener('click', submit);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+    });
+  }
+
+  function showAlert(opts) {
+    return new Promise((resolve) => {
+      const root = ensureModalRoot();
+      const wrap = document.createElement('div');
+      wrap.className = 'modal app-modal';
+      wrap.innerHTML = `
+        <div class="modal-content">
+          <h3>${opts.title || ''}</h3>
+          <p>${opts.message || ''}</p>
+          <div class="modal-buttons">
+            <button class="btn btn-primary" data-act="ok">OK</button>
+          </div>
+        </div>`;
+      root.appendChild(wrap);
+      wrap.querySelector('[data-act="ok"]').addEventListener('click', () => { root.removeChild(wrap); resolve(); });
+    });
+  }
+
+  /* =========================================================
+     COUNTDOWN OVERLAY
+     ========================================================= */
+  let countdownEl = null;
+  function showCountdown(n) {
+    if (!countdownEl) {
+      countdownEl = document.createElement('div');
+      countdownEl.className = 'countdown-overlay';
+      document.body.appendChild(countdownEl);
+    }
+    countdownEl.innerHTML = `<div class="countdown-number">${n}</div><div class="countdown-label">Lancement…</div>`;
+    countdownEl.style.display = 'flex';
+    countdownEl.classList.remove('cancel-shake');
+    void countdownEl.offsetWidth;
+    countdownEl.classList.add('pop');
+    setTimeout(() => countdownEl && countdownEl.classList.remove('pop'), 350);
+  }
+  function hideCountdown() {
+    if (countdownEl) countdownEl.style.display = 'none';
+  }
+  function cancelCountdown() {
+    if (countdownEl) {
+      countdownEl.innerHTML = `<div class="countdown-number">⏹</div><div class="countdown-label">Annulé — un joueur a rejoint</div>`;
+      countdownEl.classList.add('cancel-shake');
+      setTimeout(() => { if (countdownEl) countdownEl.style.display = 'none'; }, 1500);
+    }
   }
 
   /* =========================================================
@@ -1711,18 +1977,23 @@ html, body {
     inner.className = 'card-inner';
     el.appendChild(inner);
 
-    // Build the central oval badge
-    const oval = document.createElement('div');
-    oval.className = 'card-oval';
-    inner.appendChild(oval);
+    if (card.type === 'wild' || card.type === 'wild4') {
+      // Pure SVG-based wild card, properly centered via absolute positioning
+      const wheel = document.createElement('div');
+      wheel.className = 'wild-wheel';
+      wheel.innerHTML = wildWheelSVG(card.type === 'wild4' ? '+4' : null);
+      inner.appendChild(wheel);
+    } else {
+      const oval = document.createElement('div');
+      oval.className = 'card-oval';
+      inner.appendChild(oval);
 
-    // Center symbol
-    const center = document.createElement('div');
-    center.className = 'card-center';
-    center.innerHTML = symbolFor(card, 'large');
-    inner.appendChild(center);
+      const center = document.createElement('div');
+      center.className = 'card-center';
+      center.innerHTML = symbolFor(card, 'large');
+      inner.appendChild(center);
+    }
 
-    // Corner symbols (top-left, bottom-right)
     const tl = document.createElement('div');
     tl.className = 'card-corner tl';
     tl.innerHTML = symbolFor(card, 'small');
@@ -1742,7 +2013,6 @@ html, body {
   function symbolFor(card, size) {
     if (card.type === 'number') return String(card.value);
     if (card.type === 'skip') {
-      // Cleaner forbidden sign — thicker stroke, wider angle
       const sw = size === 'large' ? 13 : 11;
       return `<svg viewBox="0 0 100 100" class="sym-svg ${size}">
         <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="${sw}"/>
@@ -1756,24 +2026,18 @@ html, body {
       </svg>`;
     }
     if (card.type === 'draw2') return '+2';
-    if (card.type === 'wild') {
-      // Four-color quadrant wheel
-      return wildWheelSVG(size);
-    }
-    if (card.type === 'wild4') {
-      // Wheel with +4 overlay
-      return wildWheelSVG(size, '+4');
-    }
+    if (card.type === 'wild')  return wildWheelSVG();
+    if (card.type === 'wild4') return wildWheelSVG('+4');
     return '?';
   }
 
-  function wildWheelSVG(size, overlay) {
+  function wildWheelSVG(overlay) {
     const r = 38;
     const overlayHtml = overlay
       ? `<text x="50" y="62" text-anchor="middle" font-size="36" font-weight="900"
               fill="#fff" stroke="#000" stroke-width="2" paint-order="stroke">${overlay}</text>`
       : '';
-    return `<svg viewBox="0 0 100 100" class="sym-svg ${size}">
+    return `<svg viewBox="0 0 100 100" class="wild-svg">
       <circle cx="50" cy="50" r="${r+2}" fill="#fff"/>
       <path d="M50 50 L50 ${50-r} A ${r} ${r} 0 0 1 ${50+r} 50 Z" fill="#fdd835"/>
       <path d="M50 50 L${50+r} 50 A ${r} ${r} 0 0 1 50 ${50+r} Z" fill="#43a047"/>
@@ -1804,15 +2068,18 @@ html, body {
     const { players, hostId, myId, roomName, roomCode, isPublic, banList } = state;
     const isHost = (hostId === myId);
 
-    document.getElementById('lobby-room-name').textContent = roomName || 'Salon';
+    const nameEl = document.getElementById('lobby-room-name');
+    nameEl.textContent = roomName || 'Salon';
     document.getElementById('lobby-player-count').textContent = players.length;
+
+    const editRoomBtn = document.getElementById('btn-edit-room-name');
+    if (editRoomBtn) editRoomBtn.style.display = isHost ? 'inline-block' : 'none';
 
     const codeEl = document.getElementById('lobby-room-code');
     codeEl.dataset.code = roomCode;
     if (codeEl.classList.contains('hidden-code')) codeEl.textContent = '••••••••';
     else codeEl.textContent = roomCode;
 
-    // Visibility
     const visEl = document.getElementById('lobby-visibility');
     if (visEl) {
       visEl.textContent = isPublic ? 'Public' : 'Privé';
@@ -1823,32 +2090,27 @@ html, body {
       toggleVisBtn.style.display = isHost ? 'inline-block' : 'none';
       toggleVisBtn.textContent = isPublic ? 'Rendre privé' : 'Rendre public';
     }
-
-    // Regenerate code button (host only)
     const regenBtn = document.getElementById('btn-regenerate-code');
     if (regenBtn) regenBtn.style.display = isHost ? 'inline-block' : 'none';
 
-    // Players list
     const list = document.getElementById('lobby-players');
     list.innerHTML = '';
     for (const p of players) {
       const li = document.createElement('li');
       if (p.ready)         li.classList.add('ready');
       if (p.id === hostId) li.classList.add('host');
-
       const name = document.createElement('span');
       name.className = 'player-name';
       name.textContent = p.name;
-
       const tags = document.createElement('div');
       tags.className = 'player-tags';
-      if (p.id === myId)  tags.appendChild(makeTag('Toi', 'tag-you'));
+      if (p.id === myId)   tags.appendChild(makeTag('Toi', 'tag-you'));
       if (p.id === hostId) tags.appendChild(makeTag('Hôte', 'tag-host'));
-      if (p.ready)        tags.appendChild(makeTag('Prêt', 'tag-ready'));
+      if (p.ready)         tags.appendChild(makeTag('Prêt', 'tag-ready'));
       if (isHost && p.id !== myId) {
         const kbtn = document.createElement('button');
         kbtn.className = 'player-action kick'; kbtn.textContent = 'Exclure';
-        kbtn.addEventListener('click', () => opts.onKick(p.id));
+        kbtn.addEventListener('click', () => opts.onKick(p.id, p.name));
         const bbtn = document.createElement('button');
         bbtn.className = 'player-action ban'; bbtn.textContent = 'Bannir';
         bbtn.addEventListener('click', () => opts.onBan(p.id, p.name));
@@ -1860,16 +2122,13 @@ html, body {
       list.appendChild(li);
     }
 
-    // Edit pseudo button (own pseudo)
     const editPseudoBtn = document.getElementById('btn-edit-pseudo');
     if (editPseudoBtn) editPseudoBtn.style.display = 'inline-block';
 
-    // Start button (host only)
     const startBtn = document.getElementById('btn-start-host');
     startBtn.style.display = isHost ? 'inline-block' : 'none';
     startBtn.disabled = players.length < 2;
 
-    // Ban list (host only)
     const banSection = document.getElementById('ban-list-section');
     if (banSection) {
       banSection.style.display = isHost ? 'block' : 'none';
@@ -1915,7 +2174,6 @@ html, body {
     const colorEl = document.getElementById('game-current-color');
     colorEl.className = 'current-color ' + (view.currentColor || '');
 
-    // Opponents
     const oppRoot = document.getElementById('opponents');
     oppRoot.innerHTML = '';
     for (const p of view.players) {
@@ -1925,19 +2183,13 @@ html, body {
       if (p.id === view.currentPlayerId) opp.classList.add('active');
       if (p.calledUno || p.handCount === 1) opp.classList.add('uno');
       if (p.finishedRank) opp.classList.add('finished');
-
       const nameEl = document.createElement('div');
       nameEl.className = 'opp-name';
       nameEl.textContent = p.name + (!p.connected ? ' (déco)' : '');
-
       const metaEl = document.createElement('div');
       metaEl.className = 'opp-meta';
-      if (p.finishedRank) {
-        metaEl.textContent = `🏁 #${p.finishedRank}`;
-      } else {
-        metaEl.textContent = `${p.handCount} carte${p.handCount > 1 ? 's' : ''}`;
-      }
-
+      if (p.finishedRank) metaEl.textContent = `🏁 #${p.finishedRank}`;
+      else                metaEl.textContent = `${p.handCount} carte${p.handCount > 1 ? 's' : ''}`;
       const cards = document.createElement('div');
       cards.className = 'opp-cards';
       if (!p.finishedRank) {
@@ -1953,13 +2205,10 @@ html, body {
         opp.title = "Cliquer pour signaler l'oubli du UNO";
         opp.addEventListener('click', () => opts.onCatchUno(p.id));
       }
-      opp.appendChild(nameEl);
-      opp.appendChild(metaEl);
-      opp.appendChild(cards);
+      opp.appendChild(nameEl); opp.appendChild(metaEl); opp.appendChild(cards);
       oppRoot.appendChild(opp);
     }
 
-    // Discard pile
     const discard = document.getElementById('discard-pile');
     discard.innerHTML = '';
     if (view.topCard) {
@@ -1968,7 +2217,6 @@ html, body {
     }
     document.getElementById('draw-count').textContent = view.drawPileCount + ' cartes';
 
-    // Turn indicator
     const turnEl = document.getElementById('turn-indicator');
     const cur = view.players.find(p => p.id === view.currentPlayerId);
     if (view.status === 'choosing-color' && view.players[0]?.id === view.myId) {
@@ -1983,7 +2231,6 @@ html, body {
       turnEl.textContent = cur ? `Tour de ${cur.name}` : '';
     }
 
-    // My hand
     const handEl = document.getElementById('my-hand');
     handEl.innerHTML = '';
     const myPlayer = view.players.find(p => p.id === view.myId);
@@ -1996,19 +2243,21 @@ html, body {
       el.addEventListener('click', () => {
         if (iAmFinished) {
           toast('Tu as déjà fini ! Regarde les autres jouer.', { error: true });
+          Audio.error();
           return;
         }
         if (!isMyTurn) {
-          // Local-only fake-play animation: bump up briefly, show red text
           el.classList.add('shake');
           setTimeout(() => el.classList.remove('shake'), 350);
           toast("Ce n'est pas ton tour !", { error: true });
+          Audio.error();
           return;
         }
         if (!playable) {
           el.classList.add('shake');
           setTimeout(() => el.classList.remove('shake'), 350);
           toast('Tu ne peux pas jouer cette carte.', { error: true });
+          Audio.error();
           return;
         }
         opts.onPlayCard(c);
@@ -2024,12 +2273,11 @@ html, body {
       'hidden', !(view.waitingForDrawDecision && view.currentPlayerId === view.myId)
     );
     const unoBtn = document.getElementById('btn-uno');
-    // UNO call: only available when down to 1 card (per user request)
     unoBtn.classList.toggle('hidden', !myPlayer || iAmFinished || myPlayer.handCount !== 1);
   }
 
   /* =========================================================
-     COLOR PICKER MODAL
+     COLOR PICKER MODAL (already exists in HTML)
      ========================================================= */
   function showColorPicker() {
     return new Promise((resolve) => {
@@ -2089,11 +2337,9 @@ html, body {
           <span class="room-entry-name"></span>
           <span class="room-entry-meta"></span>
         </div>
-        <button class="btn btn-secondary">Rejoindre</button>
-      `;
+        <button class="btn btn-secondary">Rejoindre</button>`;
       div.querySelector('.room-entry-name').textContent = r.name || 'Salon';
-      div.querySelector('.room-entry-meta').textContent =
-        `Code : ${r.code} · ${r.players}/${r.max} joueurs`;
+      div.querySelector('.room-entry-meta').textContent = `Code : ${r.code} · ${r.players}/${r.max} joueurs`;
       div.querySelector('button').addEventListener('click', () => onJoin(r.code));
       root.appendChild(div);
     }
@@ -2105,7 +2351,6 @@ html, body {
   function renderGameOver(view) {
     const ol = document.getElementById('gameover-scores');
     ol.innerHTML = '';
-    // Build ranking from view.players using finishedRank
     const ranked = view.players.slice().sort((a, b) => {
       if (a.finishedRank == null && b.finishedRank == null) return 0;
       if (a.finishedRank == null) return 1;
@@ -2126,7 +2371,7 @@ html, body {
   }
 
   /* =========================================================
-     ANIMATIONS (full-screen overlays)
+     ANIMATION OVERLAYS
      ========================================================= */
   function showSkipOverlay() {
     const el = document.createElement('div');
@@ -2151,16 +2396,14 @@ html, body {
   function showDraw2Overlay(target) {
     const el = document.createElement('div');
     el.className = 'fx-overlay fx-draw';
-    el.innerHTML = `<div class="fx-big">+2</div>
-      <div class="fx-label">${target} pioche 2</div>`;
+    el.innerHTML = `<div class="fx-big">+2</div><div class="fx-label">${target} pioche 2</div>`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1300);
   }
   function showDraw4Overlay(target) {
     const el = document.createElement('div');
     el.className = 'fx-overlay fx-draw';
-    el.innerHTML = `<div class="fx-big">+4</div>
-      <div class="fx-label">${target} pioche 4</div>`;
+    el.innerHTML = `<div class="fx-big">+4</div><div class="fx-label">${target} pioche 4</div>`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1400);
   }
@@ -2173,64 +2416,109 @@ html, body {
   }
 
   /* =========================================================
-     SOUND EFFECTS (Web Audio API — no audio files needed)
+     SOUND ENGINE
+     Each sound: try MP3 file at audios/<name>.mp3, else synth.
      ========================================================= */
   const Audio = {
     enabled: true,
     musicOn: false,
+    masterVolume: 0.5,
+    musicVolume: 0.3,
     ctx: null,
     masterGain: null,
     musicGain: null,
     musicNodes: [],
 
+    filenames: {
+      click:       'click.mp3',
+      back:        'back.mp3',
+      cardPlay:    'card_play.mp3',
+      cardDraw:    'card_draw.mp3',
+      skip:        'skip.mp3',
+      reverse:     'reverse.mp3',
+      uno:         'uno.mp3',
+      win:         'win.mp3',
+      lose:        'lose.mp3',
+      error:       'error.mp3',
+      roomCreated: 'room_created.mp3',
+      music:       'music.mp3'
+    },
+    files: {},  // name -> HTMLAudioElement, or false if failed
+    _filesAttempted: false,
+
     init() {
-      if (this.ctx) return;
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { this.enabled = false; return; }
-      this.ctx = new AC();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.5;
-      this.masterGain.connect(this.ctx.destination);
-      this.musicGain = this.ctx.createGain();
-      this.musicGain.gain.value = 0.15;
-      this.musicGain.connect(this.masterGain);
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          this.ctx = new AC();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = this.masterVolume;
+          this.masterGain.connect(this.ctx.destination);
+          this.musicGain = this.ctx.createGain();
+          this.musicGain.gain.value = this.musicVolume;
+          this.musicGain.connect(this.masterGain);
+        }
+      }
+      if (!this._filesAttempted) {
+        this._filesAttempted = true;
+        for (const [name, fn] of Object.entries(this.filenames)) this._tryLoad(name, fn);
+      }
     },
 
-    _tone(freq, dur, type, vol, when) {
+    _tryLoad(name, filename) {
+      try {
+        const a = new window.Audio('audios/' + filename);
+        a.preload = 'auto';
+        a.addEventListener('canplaythrough', () => { this.files[name] = a; }, { once: true });
+        a.addEventListener('error', () => { this.files[name] = false; }, { once: true });
+        a.load();
+      } catch { this.files[name] = false; }
+    },
+
+    _play(name, synthFn) {
       if (!this.enabled) return;
       this.init();
-      const t0 = when != null ? when : this.ctx.currentTime;
+      const f = this.files[name];
+      if (f && f !== false) {
+        try {
+          const clone = f.cloneNode();
+          clone.volume = Math.max(0, Math.min(1, this.masterVolume));
+          clone.play().catch(() => synthFn && synthFn());
+          return;
+        } catch { /* fall through */ }
+      }
+      if (synthFn) synthFn();
+    },
+
+    /* ---- public sound triggers ---- */
+    click()       { this._play('click',       () => this._sTone(900, 0.04, 'square', 0.1)); },
+    back()        { this._play('back',        () => { this._sTone(500, 0.07, 'triangle', 0.15); this._sTone(360, 0.08, 'triangle', 0.13, 0.04); }); },
+    cardPlay()    { this._play('cardPlay',    () => { this._sTone(660, 0.08, 'triangle', 0.25); this._sTone(440, 0.08, 'sine', 0.18, 0.03); }); },
+    cardDraw()    { this._play('cardDraw',    () => { this._sTone(280, 0.14, 'sawtooth', 0.16); this._sTone(220, 0.12, 'triangle', 0.12, 0.05); }); },
+    draw()        { this.cardDraw(); },
+    skip()        { this._play('skip',        () => { this._sTone(180, 0.22, 'square', 0.25); this._sTone(140, 0.22, 'square', 0.22, 0.07); }); },
+    reverse()     { this._play('reverse',     () => this._sSwoosh()); },
+    uno()         { this._play('uno',         () => { const t = this.ctx.currentTime; this._sTone(880, 0.12, 'triangle', 0.3, 0, t); this._sTone(1320, 0.18, 'triangle', 0.3, 0, t + 0.1); }); },
+    win()         { this._play('win',         () => { const t = this.ctx.currentTime; [523, 659, 784, 1047].forEach((f, i) => this._sTone(f, 0.18, 'triangle', 0.3, 0, t + i * 0.1)); }); },
+    lose()        { this._play('lose',        () => { const t = this.ctx.currentTime; [400, 320, 250].forEach((f, i) => this._sTone(f, 0.25, 'sine', 0.25, 0, t + i * 0.15)); }); },
+    error()       { this._play('error',       () => { this._sTone(220, 0.08, 'square', 0.22); this._sTone(160, 0.12, 'square', 0.22, 0.06); }); },
+    roomCreated() { this._play('roomCreated', () => { const t = this.ctx.currentTime; [523, 659, 880].forEach((f, i) => this._sTone(f, 0.14, 'triangle', 0.28, 0, t + i * 0.08)); }); },
+
+    _sTone(freq, dur, type, vol, delay, when) {
+      if (!this.ctx) return;
+      const t0 = (when != null ? when : this.ctx.currentTime) + (delay || 0);
       const osc = this.ctx.createOscillator();
       const g = this.ctx.createGain();
       osc.type = type || 'sine';
       osc.frequency.setValueAtTime(freq, t0);
       g.gain.setValueAtTime(0, t0);
       g.gain.linearRampToValueAtTime(vol || 0.3, t0 + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-      osc.connect(g);
-      g.connect(this.masterGain);
-      osc.start(t0);
-      osc.stop(t0 + dur + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0005, t0 + dur);
+      osc.connect(g); g.connect(this.masterGain);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
     },
-
-    cardPlay() {
-      this.init();
-      this._tone(660, 0.08, 'triangle', 0.25);
-      this._tone(440, 0.08, 'sine',     0.18, this.ctx.currentTime + 0.03);
-    },
-    draw() {
-      this.init();
-      this._tone(220, 0.18, 'sawtooth', 0.18);
-    },
-    skip() {
-      this.init();
-      // Buzzer: descending square waves
-      this._tone(180, 0.22, 'square', 0.25);
-      this._tone(140, 0.22, 'square', 0.22, this.ctx.currentTime + 0.07);
-    },
-    reverse() {
-      this.init();
-      // Whoosh: sweep up then down
+    _sSwoosh() {
+      if (!this.ctx) return;
       const t0 = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
       const g = this.ctx.createGain();
@@ -2240,127 +2528,105 @@ html, body {
       osc.frequency.linearRampToValueAtTime(300, t0 + 0.3);
       g.gain.setValueAtTime(0, t0);
       g.gain.linearRampToValueAtTime(0.15, t0 + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.32);
+      g.gain.exponentialRampToValueAtTime(0.0005, t0 + 0.32);
       osc.connect(g); g.connect(this.masterGain);
       osc.start(t0); osc.stop(t0 + 0.35);
     },
-    uno() {
-      this.init();
-      const t = this.ctx.currentTime;
-      this._tone(880, 0.12, 'triangle', 0.3, t);
-      this._tone(1320, 0.18, 'triangle', 0.3, t + 0.1);
-    },
-    win() {
-      this.init();
-      const t = this.ctx.currentTime;
-      [523, 659, 784, 1047].forEach((f, i) => this._tone(f, 0.18, 'triangle', 0.3, t + i * 0.1));
-    },
-    lose() {
-      this.init();
-      const t = this.ctx.currentTime;
-      [400, 320, 250].forEach((f, i) => this._tone(f, 0.25, 'sine', 0.25, t + i * 0.15));
-    },
-    error() {
-      this.init();
-      this._tone(180, 0.12, 'square', 0.18);
-    },
-    click() {
-      this.init();
-      this._tone(900, 0.04, 'square', 0.1);
-    },
 
-    /* --- Background music: richer multi-instrument loop --- */
-    _musicTimer: null,
-    _musicChordIdx: 0,
-    _musicBarIdx: 0,
+    /* ---- music ---- */
     startMusic() {
       if (this.musicOn) return;
       this.init();
-      if (!this.enabled) return;
       this.musicOn = true;
-      this._musicChordIdx = 0;
-      this._musicBarIdx = 0;
-      this._scheduleMusicBar();
+      const file = this.files.music;
+      if (file && file !== false) {
+        try {
+          file.loop = true;
+          file.volume = Math.max(0, Math.min(1, this.musicVolume));
+          file.play().catch(() => this._synthMusicStart());
+        } catch { this._synthMusicStart(); }
+      } else {
+        this._synthMusicStart();
+      }
     },
     stopMusic() {
       this.musicOn = false;
+      const file = this.files.music;
+      if (file && file !== false) {
+        try { file.pause(); file.currentTime = 0; } catch {}
+      }
       if (this._musicTimer) { clearTimeout(this._musicTimer); this._musicTimer = null; }
       for (const n of this.musicNodes) try { n.stop(); } catch {}
       this.musicNodes = [];
     },
+    _musicTimer: null,
+    _musicChordIdx: 0,
+    _synthMusicStart() {
+      this._musicChordIdx = 0;
+      this._scheduleMusicBar();
+    },
     _voice(freq, when, dur, type, vol, attack) {
-      const t0 = when;
+      if (!this.ctx) return;
       const osc = this.ctx.createOscillator();
       const g   = this.ctx.createGain();
       osc.type = type || 'sine';
-      osc.frequency.setValueAtTime(freq, t0);
-      g.gain.setValueAtTime(0, t0);
-      g.gain.linearRampToValueAtTime(vol, t0 + (attack || 0.05));
-      g.gain.exponentialRampToValueAtTime(0.0005, t0 + dur);
+      osc.frequency.setValueAtTime(freq, when);
+      g.gain.setValueAtTime(0, when);
+      g.gain.linearRampToValueAtTime(vol, when + (attack || 0.05));
+      g.gain.exponentialRampToValueAtTime(0.0005, when + dur);
       osc.connect(g); g.connect(this.musicGain);
-      osc.start(t0); osc.stop(t0 + dur + 0.05);
+      osc.start(when); osc.stop(when + dur + 0.05);
       this.musicNodes.push(osc);
     },
     _scheduleMusicBar() {
       if (!this.musicOn || !this.ctx) return;
       const t0 = this.ctx.currentTime + 0.02;
-
-      // Chord progression: I - V - vi - IV (C major: C, G, Am, F)
-      // Each chord = one bar = 2.0 seconds (≈120 BPM, 4 beats of 0.5s)
       const PROGRESSION = [
-        { root: 130.81, third: 164.81, fifth: 196.00, name: 'C',  scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25] },
-        { root: 196.00, third: 246.94, fifth: 293.66, name: 'G',  scale: [293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33] },
-        { root: 220.00, third: 261.63, fifth: 329.63, name: 'Am', scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33] },
-        { root: 174.61, third: 220.00, fifth: 261.63, name: 'F',  scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33] }
+        { root: 130.81, third: 164.81, fifth: 196.00, scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25] },
+        { root: 196.00, third: 246.94, fifth: 293.66, scale: [293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33] },
+        { root: 220.00, third: 261.63, fifth: 329.63, scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33] },
+        { root: 174.61, third: 220.00, fifth: 261.63, scale: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 587.33] }
       ];
       const chord = PROGRESSION[this._musicChordIdx % PROGRESSION.length];
       this._musicChordIdx++;
-      this._musicBarIdx++;
-      const bar = 2.0;
-      const beat = bar / 4;
-
-      // ---- Bass: root on beats 1 & 3, fifth on beats 2 & 4
-      this._voice(chord.root,   t0,             beat * 1.2, 'sawtooth', 0.10, 0.01);
-      this._voice(chord.fifth/2,t0 + beat,      beat * 1.0, 'sawtooth', 0.08, 0.01);
-      this._voice(chord.root,   t0 + beat * 2,  beat * 1.2, 'sawtooth', 0.10, 0.01);
-      this._voice(chord.fifth/2,t0 + beat * 3,  beat * 1.0, 'sawtooth', 0.08, 0.01);
-
-      // ---- Pad: sustained chord notes throughout the bar
-      this._voice(chord.root  * 2, t0, bar, 'sine',     0.05, 0.3);
-      this._voice(chord.third * 2, t0, bar, 'sine',     0.045, 0.3);
-      this._voice(chord.fifth * 2, t0, bar, 'sine',     0.045, 0.3);
-      this._voice(chord.root  * 4, t0, bar, 'triangle', 0.025, 0.4);
-
-      // ---- Arpeggio: 8 sixteenth notes through the chord
-      const arpNotes = [chord.root*2, chord.third*2, chord.fifth*2, chord.root*4,
-                        chord.fifth*2, chord.third*2, chord.root*2, chord.third*2];
-      for (let i = 0; i < 8; i++) {
-        this._voice(arpNotes[i], t0 + i * (bar / 8), bar / 8 * 0.9, 'triangle', 0.045, 0.005);
-      }
-
-      // ---- Lead melody: 2-4 notes per bar from the scale
+      const bar = 2.0, beat = bar / 4;
+      this._voice(chord.root, t0, beat * 1.2, 'sawtooth', 0.10, 0.01);
+      this._voice(chord.fifth/2, t0 + beat, beat * 1.0, 'sawtooth', 0.08, 0.01);
+      this._voice(chord.root, t0 + beat * 2, beat * 1.2, 'sawtooth', 0.10, 0.01);
+      this._voice(chord.fifth/2, t0 + beat * 3, beat * 1.0, 'sawtooth', 0.08, 0.01);
+      this._voice(chord.root * 2, t0, bar, 'sine', 0.05, 0.3);
+      this._voice(chord.third * 2, t0, bar, 'sine', 0.045, 0.3);
+      this._voice(chord.fifth * 2, t0, bar, 'sine', 0.045, 0.3);
+      this._voice(chord.root * 4, t0, bar, 'triangle', 0.025, 0.4);
+      const arpNotes = [chord.root*2, chord.third*2, chord.fifth*2, chord.root*4, chord.fifth*2, chord.third*2, chord.root*2, chord.third*2];
+      for (let i = 0; i < 8; i++) this._voice(arpNotes[i], t0 + i * (bar/8), bar/8 * 0.9, 'triangle', 0.045, 0.005);
       const numLeadNotes = 2 + Math.floor(Math.random() * 3);
       for (let i = 0; i < numLeadNotes; i++) {
         const noteFreq = chord.scale[Math.floor(Math.random() * chord.scale.length)];
-        const noteStart = t0 + (i / numLeadNotes) * bar + Math.random() * (bar / 8);
+        const noteStart = t0 + (i / numLeadNotes) * bar + Math.random() * (bar/8);
         const noteDur = (bar / numLeadNotes) * 0.7;
         this._voice(noteFreq, noteStart, noteDur, 'square', 0.04, 0.02);
       }
-
-      // ---- Soft kick on beat 1
       this._voice(60, t0, 0.12, 'square', 0.18, 0.005);
-
       this.musicNodes = this.musicNodes.slice(-200);
       this._musicTimer = setTimeout(() => this._scheduleMusicBar(), bar * 1000);
     },
 
-    setMusicVolume(v) {
-      this.init();
-      if (this.musicGain) this.musicGain.gain.value = v;
-    },
     setMasterVolume(v) {
+      this.masterVolume = v;
       this.init();
       if (this.masterGain) this.masterGain.gain.value = v;
+      for (const name in this.files) {
+        const f = this.files[name];
+        if (f && f !== false && name !== 'music') f.volume = Math.max(0, Math.min(1, v));
+      }
+    },
+    setMusicVolume(v) {
+      this.musicVolume = v;
+      this.init();
+      if (this.musicGain) this.musicGain.gain.value = v;
+      const f = this.files.music;
+      if (f && f !== false) f.volume = Math.max(0, Math.min(1, v));
     }
   };
 
@@ -2369,6 +2635,8 @@ html, body {
      ========================================================= */
   window.UnoUI = {
     showScreen, toast,
+    showConfirm, showPrompt, showAlert,
+    showCountdown, hideCountdown, cancelCountdown,
     buildCardEl, buildCardBack,
     renderLobby, renderGame,
     showColorPicker, showChallengeModal,
@@ -2382,7 +2650,7 @@ html, body {
 
 /* ===== js/app.js ===== */
 /* =========================================================
-   UnoPlay — App orchestration
+   UnoPlay — App orchestration (v6)
    ========================================================= */
 
 (function () {
@@ -2394,7 +2662,7 @@ html, body {
   const Net   = window.UnoNet;
 
   /* ---------------------------------------------------------
-     Persisted nickname + ban list
+     Persistence
      --------------------------------------------------------- */
   const NICK_KEY = 'unoplay.nickname';
   const BAN_KEY  = 'unoplay.banlist';
@@ -2402,27 +2670,17 @@ html, body {
   const VOL_KEY = 'unoplay.volumes';
   function loadNickname() { try { return localStorage.getItem(NICK_KEY) || ''; } catch { return ''; } }
   function saveNickname(v) { try { localStorage.setItem(NICK_KEY, v); } catch {} }
-  function loadBanList() {
-    try { return JSON.parse(localStorage.getItem(BAN_KEY) || '[]'); } catch { return []; }
-  }
-  function saveBanList(arr) {
-    try { localStorage.setItem(BAN_KEY, JSON.stringify(arr)); } catch {}
-  }
-  function loadBannedFrom() {
-    try { return JSON.parse(localStorage.getItem(BANNED_FROM_KEY) || '[]'); } catch { return []; }
-  }
+  function loadBanList() { try { return JSON.parse(localStorage.getItem(BAN_KEY) || '[]'); } catch { return []; } }
+  function saveBanList(arr) { try { localStorage.setItem(BAN_KEY, JSON.stringify(arr)); } catch {} }
+  function loadBannedFrom() { try { return JSON.parse(localStorage.getItem(BANNED_FROM_KEY) || '[]'); } catch { return []; } }
   function addBannedFrom(code) {
     if (!code) return;
     const arr = loadBannedFrom();
-    if (!arr.includes(code)) {
-      arr.push(code);
-      try { localStorage.setItem(BANNED_FROM_KEY, JSON.stringify(arr)); } catch {}
-    }
+    if (!arr.includes(code)) { arr.push(code); try { localStorage.setItem(BANNED_FROM_KEY, JSON.stringify(arr)); } catch {} }
   }
   function loadVolumes() {
-    try {
-      return Object.assign({ master: 0.5, music: 0.3 }, JSON.parse(localStorage.getItem(VOL_KEY) || '{}'));
-    } catch { return { master: 0.5, music: 0.3 }; }
+    try { return Object.assign({ master: 0.5, music: 0.3 }, JSON.parse(localStorage.getItem(VOL_KEY) || '{}')); }
+    catch { return { master: 0.5, music: 0.3 }; }
   }
   function saveVolumes(v) { try { localStorage.setItem(VOL_KEY, JSON.stringify(v)); } catch {} }
 
@@ -2430,37 +2688,19 @@ html, body {
      App state
      --------------------------------------------------------- */
   const App = {
-    role: null,
-    myNickname: '',
-
-    // HOST
-    hostNet: null,
-    directory: null,
-    isPublic: true,
-    roomCode: null,
-    roomName: '',
-    targetScore: null,  // unused now
-    lobby: {
-      players: [],
-      hostId: 'self',
-      status: 'lobby'
-    },
+    role: null, myNickname: '',
+    hostNet: null, directory: null, isPublic: true,
+    roomCode: null, roomName: '',
+    lobby: { players: [], hostId: 'self', status: 'lobby' },
     game: null,
     banList: loadBanList(),
     lastCodeRotateAt: 0,
-
-    // CLIENT
-    clientNet: null,
-    clientLastView: null,
-    clientLastLobby: null,
-    clientMyId: null,
-    clientHostId: null,
-    clientIsPublic: true
+    countdownInterval: null,
+    countdownValue: 0,
+    clientNet: null, clientLastView: null, clientLastLobby: null,
+    clientMyId: null, clientHostId: null, clientIsPublic: true
   };
 
-  /* =========================================================
-     UTILITIES
-     ========================================================= */
   function $(id) { return document.getElementById(id); }
   function setStatus(elId, msg, kind) {
     const el = $(elId);
@@ -2469,27 +2709,25 @@ html, body {
     el.className = 'status-line ' + (kind || '');
   }
 
-  function suggestPseudo() {
-    return Cards.generateRandomPseudo();
-  }
+  function suggestPseudo() { return Cards.generateRandomPseudo(); }
 
   function validatePseudo(name) {
     name = (name || '').trim();
     if (name.length < 2) return { ok: false, error: 'Pseudo trop court (2 caractères min).' };
     if (name.length > 16) return { ok: false, error: 'Pseudo trop long (16 max).' };
-    if (Cards.isInappropriate(name)) return { ok: false, error: 'Ce pseudo n\'est pas autorisé. Choisis-en un autre.' };
+    if (Cards.isInappropriate(name)) return { ok: false, error: "Ce pseudo n'est pas autorisé." };
     return { ok: true };
   }
-
   function validateRoomName(name) {
     name = (name || '').trim();
-    if (name.length === 0) return { ok: true }; // will use default
-    if (name.length > 28) return { ok: false, error: 'Nom de salon trop long.' };
-    if (Cards.isInappropriate(name)) return { ok: false, error: 'Nom de salon non autorisé.' };
+    if (name.length === 0) return { ok: true };
+    if (name.length > 28) return { ok: false, error: 'Nom trop long (28 max).' };
+    if (Cards.isInappropriate(name)) return { ok: false, error: 'Nom non autorisé.' };
     return { ok: true };
   }
 
   function cleanupNetworking() {
+    if (App.countdownInterval) { clearInterval(App.countdownInterval); App.countdownInterval = null; UI.hideCountdown(); }
     if (App.hostNet) { try { App.hostNet.close(); } catch {} App.hostNet = null; }
     if (App.directory) {
       try { if (App.roomCode) App.directory.unregisterRoom(App.roomCode); } catch {}
@@ -2508,19 +2746,16 @@ html, body {
   function initHome() {
     $('btn-goto-create').addEventListener('click', () => {
       UI.Audio.click();
-      // Pre-fill pseudo with last-saved value or a random suggestion
       const saved = loadNickname();
-      const pseudoInput = $('input-pseudo-create');
-      pseudoInput.value = saved || suggestPseudo();
-      // Pre-fill room name based on pseudo
-      $('input-room-name').value = `Salon de ${pseudoInput.value}`;
-      $('input-room-name').dataset.autofill = '1';
+      $('input-pseudo-create').value = saved || suggestPseudo();
+      const ri = $('input-room-name');
+      ri.value = `Salon de ${$('input-pseudo-create').value}`;
+      ri.dataset.autofill = '1';
       UI.showScreen('create');
     });
     $('btn-goto-join').addEventListener('click', () => {
       UI.Audio.click();
-      const saved = loadNickname();
-      $('input-pseudo-join').value = saved || suggestPseudo();
+      $('input-pseudo-join').value = loadNickname() || suggestPseudo();
       UI.showScreen('join');
     });
     $('btn-goto-public').addEventListener('click', () => {
@@ -2528,10 +2763,9 @@ html, body {
       UI.showScreen('public');
       loadPublicRooms();
     });
-
     document.querySelectorAll('.btn-back').forEach(b => {
       b.addEventListener('click', () => {
-        UI.Audio.click();
+        UI.Audio.back();
         cleanupNetworking();
         UI.showScreen(b.dataset.back || 'home');
       });
@@ -2549,31 +2783,23 @@ html, body {
     randomBtn.addEventListener('click', () => {
       UI.Audio.click();
       pseudoInput.value = suggestPseudo();
-      if (roomNameInput.dataset.autofill === '1') {
-        roomNameInput.value = `Salon de ${pseudoInput.value}`;
-      }
+      if (roomNameInput.dataset.autofill === '1') roomNameInput.value = `Salon de ${pseudoInput.value}`;
     });
     pseudoInput.addEventListener('input', () => {
-      if (roomNameInput.dataset.autofill === '1') {
-        roomNameInput.value = `Salon de ${pseudoInput.value.trim() || '...'}`;
-      }
+      if (roomNameInput.dataset.autofill === '1') roomNameInput.value = `Salon de ${pseudoInput.value.trim() || '...'}`;
     });
-    roomNameInput.addEventListener('input', () => {
-      roomNameInput.dataset.autofill = '0';
-    });
+    roomNameInput.addEventListener('input', () => { roomNameInput.dataset.autofill = '0'; });
 
     $('btn-create-room').addEventListener('click', async () => {
       const pseudo = pseudoInput.value.trim();
       const vp = validatePseudo(pseudo);
       if (!vp.ok) { setStatus('create-status', vp.error, 'error'); UI.Audio.error(); return; }
-
       let name = roomNameInput.value.trim();
       if (!name) name = `Salon de ${pseudo}`;
       const vn = validateRoomName(name);
       if (!vn.ok) { setStatus('create-status', vn.error, 'error'); UI.Audio.error(); return; }
 
-      App.myNickname = pseudo;
-      saveNickname(pseudo);
+      App.myNickname = pseudo; saveNickname(pseudo);
       App.roomName = name;
       App.isPublic = $('input-room-public').checked;
       App.role = 'host';
@@ -2583,46 +2809,36 @@ html, body {
       let success = false;
       for (let attempt = 0; attempt < 5 && !success; attempt++) {
         const code = Cards.generateRoomCode();
-        try {
-          await App.hostNet.addCode(code);
-          App.roomCode = code;
-          success = true;
-        } catch (err) {
+        try { await App.hostNet.addCode(code); App.roomCode = code; success = true; }
+        catch (err) {
           if (attempt === 4) {
             setStatus('create-status', err.message || 'Erreur réseau.', 'error');
             UI.Audio.error();
-            App.hostNet.close(); App.hostNet = null;
-            return;
+            App.hostNet.close(); App.hostNet = null; return;
           }
         }
       }
       setupHostEvents();
       App.lobby = {
-        players: [{
-          id: 'self', peerId: 'self', name: pseudo,
-          ready: false, connected: true
-        }],
-        hostId: 'self',
-        status: 'lobby'
+        players: [{ id: 'self', peerId: 'self', name: pseudo, ready: false, connected: true }],
+        hostId: 'self', status: 'lobby'
       };
       if (App.isPublic) {
         App.directory = new Net.Directory();
         try {
           await App.directory.claimOrConnect();
-          App.directory.registerRoom({
-            code: App.roomCode, name: App.roomName, players: 1, max: 8
-          });
-        } catch (err) {
-          console.warn('Directory registration failed:', err);
-        }
+          App.directory.registerRoom({ code: App.roomCode, name: App.roomName, players: 1, max: 8 });
+        } catch {}
       }
       UI.showScreen('lobby');
       renderHostLobby();
+      // "Salon créé" feedback
+      UI.Audio.roomCreated();
+      UI.toast(`Salon "${App.roomName}" créé ! Code : ${App.roomCode}`, { success: true, duration: 3500 });
     });
   }
 
   function setupHostEvents() {
-    App.hostNet.addEventListener('client-connected', () => {});
     App.hostNet.addEventListener('client-disconnected', (e) => {
       const peerId = e.detail.peerId;
       if (App.lobby.status === 'lobby') {
@@ -2633,17 +2849,12 @@ html, body {
         const p = App.lobby.players.find(p => p.peerId === peerId);
         if (p) {
           p.connected = false;
-          if (App.game) {
-            const gp = App.game.players.find(g => g.id === p.id);
-            if (gp) gp.connected = false;
-          }
+          if (App.game) { const gp = App.game.players.find(g => g.id === p.id); if (gp) gp.connected = false; }
           broadcastState();
         }
       }
     });
-    App.hostNet.addEventListener('message', (e) => {
-      onHostMessage(e.detail.peerId, e.detail.message);
-    });
+    App.hostNet.addEventListener('message', (e) => onHostMessage(e.detail.peerId, e.detail.message));
   }
 
   function onHostMessage(peerId, msg) {
@@ -2659,27 +2870,28 @@ html, body {
           App.hostNet.kick(peerId, 'full'); return;
         }
         const rawName = String(msg.name || 'Anonyme').slice(0, 16);
-        // Ban check
         const lc = rawName.toLowerCase();
         if (App.banList.some(b => b.toLowerCase() === lc)) {
           App.hostNet.sendTo(peerId, { type: 'error', message: 'Tu as été banni de ce salon.' });
           App.hostNet.kick(peerId, 'banned'); return;
         }
-        // Profanity check
         if (Cards.isInappropriate(rawName)) {
           App.hostNet.sendTo(peerId, { type: 'error', message: 'Pseudo non autorisé.' });
           App.hostNet.kick(peerId, 'inappropriate'); return;
         }
-        // Name conflict (append number if needed)
         let name = rawName, suffix = 2;
         while (App.lobby.players.some(p => p.name === name)) name = rawName + suffix++;
-        App.lobby.players.push({
-          id: peerId, peerId, name, ready: false, connected: true
-        });
+        App.lobby.players.push({ id: peerId, peerId, name, ready: false, connected: true });
+        // Cancel countdown if running
+        if (App.countdownInterval) {
+          clearInterval(App.countdownInterval); App.countdownInterval = null;
+          App.hostNet.broadcast({ type: 'countdown-cancel' });
+          UI.cancelCountdown();
+          UI.toast('Un joueur a rejoint — compte à rebours annulé.', { error: true });
+        }
         App.hostNet.sendTo(peerId, {
           type: 'welcome', yourId: peerId, hostId: 'self',
-          assignedName: name, isPublic: App.isPublic,
-          lobby: serializeLobby()
+          assignedName: name, isPublic: App.isPublic, lobby: serializeLobby()
         });
         broadcastLobby();
         updateDirectory();
@@ -2693,15 +2905,11 @@ html, body {
       case 'rename': {
         const newName = String(msg.name || '').trim();
         const vp = validatePseudo(newName);
-        if (!vp.ok) {
-          App.hostNet.sendTo(peerId, { type: 'notify', message: vp.error }); return;
-        }
+        if (!vp.ok) { App.hostNet.sendTo(peerId, { type: 'notify', message: vp.error }); return; }
         const p = App.lobby.players.find(p => p.peerId === peerId);
         if (p) {
-          // Conflict check
           if (App.lobby.players.some(o => o !== p && o.name === newName)) {
-            App.hostNet.sendTo(peerId, { type: 'notify', message: 'Ce pseudo est déjà pris dans le salon.' });
-            return;
+            App.hostNet.sendTo(peerId, { type: 'notify', message: 'Ce pseudo est déjà pris.' }); return;
           }
           p.name = newName;
           App.hostNet.sendTo(peerId, { type: 'rename-ok', name: newName });
@@ -2709,12 +2917,8 @@ html, body {
         }
         break;
       }
-      case 'action-play':
-      case 'action-draw':
-      case 'action-pass':
-      case 'action-uno':
-      case 'action-catch-uno':
-      case 'action-challenge':
+      case 'action-play': case 'action-draw': case 'action-pass':
+      case 'action-uno':  case 'action-catch-uno': case 'action-challenge':
       case 'action-choose-color': {
         const player = App.lobby.players.find(p => p.peerId === peerId);
         if (!player) return;
@@ -2731,13 +2935,8 @@ html, body {
 
   function serializeLobby() {
     return {
-      roomName: App.roomName,
-      roomCode: App.roomCode,
-      hostId: App.lobby.hostId,
-      isPublic: App.isPublic,
-      players: App.lobby.players.map(p => ({
-        id: p.id, name: p.name, ready: p.ready, connected: p.connected
-      }))
+      roomName: App.roomName, roomCode: App.roomCode, hostId: App.lobby.hostId, isPublic: App.isPublic,
+      players: App.lobby.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, connected: p.connected }))
     };
   }
 
@@ -2746,57 +2945,61 @@ html, body {
     if (App.hostNet) App.hostNet.broadcast({ type: 'lobby', lobby, isPublic: App.isPublic });
     renderHostLobby();
     updateDirectory();
-    // Auto-start if all ready
-    const allReady = App.lobby.players.length >= 2 &&
-                     App.lobby.players.every(p => p.ready);
-    if (allReady) hostStartGame();
+    const allReady = App.lobby.players.length >= 2 && App.lobby.players.every(p => p.ready);
+    if (allReady && !App.countdownInterval) startGameCountdown();
   }
 
   function updateDirectory() {
     if (!App.directory) return;
     if (App.isPublic) {
-      App.directory.registerRoom({
-        code: App.roomCode, name: App.roomName,
-        players: App.lobby.players.length, max: 8
-      });
+      App.directory.registerRoom({ code: App.roomCode, name: App.roomName, players: App.lobby.players.length, max: 8 });
     } else {
       try { App.directory.unregisterRoom(App.roomCode); } catch {}
     }
   }
 
-  /* =========================================================
-     HOST LOBBY UI
-     ========================================================= */
   function renderHostLobby() {
     UI.renderLobby({
-      players: App.lobby.players,
-      hostId: 'self',
-      myId: 'self',
-      roomName: App.roomName,
-      roomCode: App.roomCode,
-      isPublic: App.isPublic,
+      players: App.lobby.players, hostId: 'self', myId: 'self',
+      roomName: App.roomName, roomCode: App.roomCode, isPublic: App.isPublic,
       banList: App.banList
     }, {
-      onKick: (targetId) => {
+      onKick: async (targetId, name) => {
         const t = App.lobby.players.find(p => p.id === targetId);
         if (!t || t.id === 'self') return;
+        const ok = await UI.showConfirm({
+          title: 'Exclure ce joueur ?', message: `${name} sera retiré du salon mais pourra revenir.`,
+          okLabel: 'Exclure', danger: true
+        });
+        if (!ok) return;
         App.hostNet.kick(t.peerId, 'kicked');
         App.lobby.players = App.lobby.players.filter(p => p.id !== targetId);
+        UI.toast(`${name} a été exclu.`);
         broadcastLobby();
       },
-      onBan: (targetId, name) => {
+      onBan: async (targetId, name) => {
         const t = App.lobby.players.find(p => p.id === targetId);
         if (!t || t.id === 'self') return;
+        const ok = await UI.showConfirm({
+          title: 'Bannir ce joueur ?',
+          message: `${name} ne pourra plus rejoindre ce salon. Tu pourras le débannir depuis la liste.`,
+          okLabel: 'Bannir définitivement', danger: true
+        });
+        if (!ok) return;
         if (!App.banList.some(b => b.toLowerCase() === name.toLowerCase())) {
-          App.banList.push(name);
-          saveBanList(App.banList);
+          App.banList.push(name); saveBanList(App.banList);
         }
         App.hostNet.kick(t.peerId, 'banned');
         App.lobby.players = App.lobby.players.filter(p => p.id !== targetId);
         UI.toast(`${name} a été banni.`);
         broadcastLobby();
       },
-      onUnban: (name) => {
+      onUnban: async (name) => {
+        const ok = await UI.showConfirm({
+          title: 'Débannir ce joueur ?', message: `${name} pourra à nouveau rejoindre le salon.`,
+          okLabel: 'Débannir'
+        });
+        if (!ok) return;
         App.banList = App.banList.filter(b => b.toLowerCase() !== name.toLowerCase());
         saveBanList(App.banList);
         renderHostLobby();
@@ -2806,25 +3009,36 @@ html, body {
   }
 
   /* =========================================================
-     HOST: START GAME
+     COUNTDOWN BEFORE GAME START
      ========================================================= */
+  function startGameCountdown() {
+    if (App.lobby.players.length < 2) { UI.toast('Au moins 2 joueurs requis.', { error: true }); return; }
+    App.countdownValue = 5;
+    App.hostNet.broadcast({ type: 'countdown', n: App.countdownValue });
+    UI.showCountdown(App.countdownValue);
+    UI.Audio.click();
+    App.countdownInterval = setInterval(() => {
+      App.countdownValue--;
+      if (App.countdownValue <= 0) {
+        clearInterval(App.countdownInterval); App.countdownInterval = null;
+        UI.hideCountdown();
+        hostStartGame();
+      } else {
+        App.hostNet.broadcast({ type: 'countdown', n: App.countdownValue });
+        UI.showCountdown(App.countdownValue);
+        UI.Audio.click();
+      }
+    }, 1000);
+  }
+
   function hostStartGame() {
-    if (App.lobby.players.length < 2) {
-      UI.toast('Au moins 2 joueurs requis.', { error: true });
-      return;
-    }
+    if (App.lobby.players.length < 2) { UI.toast('Au moins 2 joueurs requis.', { error: true }); return; }
     App.lobby.status = 'playing';
-    App.game = Rules.createGame(
-      App.lobby.players.map(p => ({ id: p.id, name: p.name }))
-    );
+    App.game = Rules.createGame(App.lobby.players.map(p => ({ id: p.id, name: p.name })));
     Rules.startRound(App.game);
-    // Hide the room from public listing while in game
-    if (App.directory && App.isPublic) {
-      try { App.directory.unregisterRoom(App.roomCode); } catch {}
-    }
+    if (App.directory && App.isPublic) { try { App.directory.unregisterRoom(App.roomCode); } catch {} }
     App.hostNet.broadcast({ type: 'game-start' });
     UI.showScreen('game');
-    UI.Audio.click();
     broadcastState();
   }
 
@@ -2837,8 +3051,7 @@ html, body {
     switch (msg.type) {
       case 'action-play':
         result = Rules.playCard(App.game, playerId, msg.cardId, msg.chosenColor);
-        if (!result.ok) { sendErrorTo(playerId, result.error || "Action invalide."); return; }
-        // Broadcast animation cues based on the played card
+        if (!result.ok) { sendErrorTo(playerId, result.error || 'Action invalide.'); return; }
         if (result.card) broadcastFx(result.card, playerId);
         broadcastState();
         if (result.awaitingChallenge) {
@@ -2853,6 +3066,7 @@ html, body {
       case 'action-draw':
         result = Rules.drawForCurrentPlayer(App.game, playerId);
         if (!result.ok) sendErrorTo(playerId, result.error);
+        else { App.hostNet.broadcast({ type: 'fx-carddraw' }); UI.Audio.cardDraw(); }
         broadcastState();
         break;
       case 'action-pass':
@@ -2885,25 +3099,17 @@ html, body {
   }
 
   function broadcastFx(card, byPlayerId) {
-    const byName = (App.game.players.find(p => p.id === byPlayerId) || {}).name || '';
     let fx = null;
-    if (card.type === 'skip')    fx = { type: 'fx-skip', by: byName };
+    if (card.type === 'skip') fx = { type: 'fx-skip' };
     else if (card.type === 'reverse') fx = { type: 'fx-reverse' };
     else if (card.type === 'draw2') {
-      const tIdx = Rules.nextIndex(App.game, 0);  // current player is already advanced; we want previous "next"
-      // Simpler: find the target from lastAction or fall back to current
       const targetName = (App.game.players[App.game.currentPlayer] || {}).name || '';
       fx = { type: 'fx-draw2', targetName };
-    }
-    else if (card.type === 'wild4') {
+    } else if (card.type === 'wild4') {
       const targetName = (App.game.players[App.game.currentPlayer] || {}).name || '';
       fx = { type: 'fx-draw4', targetName };
     }
-    if (fx) {
-      App.hostNet.broadcast(fx);
-      handleLocalFx(fx);
-    }
-    // Always play card-play sound for everyone
+    if (fx) { App.hostNet.broadcast(fx); handleLocalFx(fx); }
     App.hostNet.broadcast({ type: 'fx-cardplay' });
     UI.Audio.cardPlay();
   }
@@ -2916,17 +3122,18 @@ html, body {
   }
 
   function handleLocalFx(fx) {
-    if (fx.type === 'fx-skip')    { UI.showSkipOverlay();    UI.Audio.skip();    }
+    if (fx.type === 'fx-skip')    { UI.showSkipOverlay();    UI.Audio.skip(); }
     if (fx.type === 'fx-reverse') { UI.showReverseOverlay(); UI.Audio.reverse(); }
-    if (fx.type === 'fx-draw2')   { UI.showDraw2Overlay(fx.targetName); UI.Audio.draw(); }
-    if (fx.type === 'fx-draw4')   { UI.showDraw4Overlay(fx.targetName); UI.Audio.draw(); }
+    if (fx.type === 'fx-draw2')   { UI.showDraw2Overlay(fx.targetName); UI.Audio.cardDraw(); }
+    if (fx.type === 'fx-draw4')   { UI.showDraw4Overlay(fx.targetName); UI.Audio.cardDraw(); }
     if (fx.type === 'fx-uno')     { UI.showUnoCallOverlay(fx.name); UI.Audio.uno(); }
     if (fx.type === 'fx-cardplay'){ UI.Audio.cardPlay(); }
+    if (fx.type === 'fx-carddraw'){ UI.Audio.cardDraw(); }
   }
 
   function sendErrorTo(playerId, message) {
     const peer = peerIdFor(playerId);
-    if (peer === 'self') UI.toast(message, { error: true });
+    if (peer === 'self') { UI.toast(message, { error: true }); UI.Audio.error(); }
     else if (peer) App.hostNet.sendTo(peer, { type: 'notify', message });
   }
 
@@ -2942,31 +3149,22 @@ html, body {
       App.hostNet.broadcast({ type: 'game-over', view });
       UI.renderGameOver(view);
       UI.showScreen('gameover');
-      const winner = view.players.find(p => p.finishedRank === 1);
       const myFinish = view.players.find(p => p.id === 'self')?.finishedRank;
-      if (myFinish === 1) UI.Audio.win();
-      else UI.Audio.lose();
+      if (myFinish === 1) UI.Audio.win(); else UI.Audio.lose();
     }
   }
 
-  /* =========================================================
-     HOST: BROADCAST GAME STATE
-     ========================================================= */
   function buildView(gameState, forPlayerId) {
     const me = gameState.players.find(p => p.id === forPlayerId);
     return {
       roomCode: App.roomCode,
       players: gameState.players.map(p => ({
         id: p.id, name: p.name, handCount: p.hand.length,
-        calledUno: p.calledUno, finishedRank: p.finishedRank,
-        connected: p.connected
+        calledUno: p.calledUno, finishedRank: p.finishedRank, connected: p.connected
       })),
-      myId: forPlayerId,
-      myHand: me ? me.hand.slice() : [],
-      hostId: 'self',
+      myId: forPlayerId, myHand: me ? me.hand.slice() : [], hostId: 'self',
       topCard: gameState.discardPile[gameState.discardPile.length - 1] || null,
-      currentColor: gameState.currentColor,
-      direction: gameState.direction,
+      currentColor: gameState.currentColor, direction: gameState.direction,
       drawPileCount: gameState.drawPile.length,
       currentPlayerId: gameState.players[gameState.currentPlayer]?.id,
       status: gameState.status,
@@ -2985,14 +3183,10 @@ html, body {
       else App.hostNet.sendTo(p.peerId, { type: 'state', view });
     }
   }
-
   function renderHostGameView(view) {
     UI.renderGame(view, makeGameHandlers('host'));
-    if (view.status === 'choosing-color' && view.players[0]?.id === 'self') {
-      promptInitialColorLocal();
-    }
+    if (view.status === 'choosing-color' && view.players[0]?.id === 'self') promptInitialColorLocal();
   }
-
   async function promptInitialColorLocal() {
     const c = await UI.showColorPicker();
     applyAction('self', { type: 'action-choose-color', color: c });
@@ -3011,7 +3205,7 @@ html, body {
   }
 
   /* =========================================================
-     CODE ROTATION (host)
+     CODE ROTATION
      ========================================================= */
   async function rotateCode() {
     if (App.role !== 'host' || !App.hostNet) return;
@@ -3019,8 +3213,7 @@ html, body {
     if (now - App.lastCodeRotateAt < 30000) {
       const sec = Math.ceil((30000 - (now - App.lastCodeRotateAt)) / 1000);
       UI.toast(`Attends ${sec}s avant de régénérer.`, { error: true });
-      UI.Audio.error();
-      return;
+      UI.Audio.error(); return;
     }
     const oldCode = App.roomCode;
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -3029,60 +3222,42 @@ html, body {
         await App.hostNet.addCode(newCode);
         App.roomCode = newCode;
         App.lastCodeRotateAt = now;
-        // Remove old code from directory; register new
         if (App.directory && App.isPublic) {
           try { App.directory.unregisterRoom(oldCode); } catch {}
-          App.directory.registerRoom({
-            code: newCode, name: App.roomName,
-            players: App.lobby.players.length, max: 8
-          });
+          App.directory.registerRoom({ code: newCode, name: App.roomName, players: App.lobby.players.length, max: 8 });
         }
-        // Tell connected clients the new code (for display only)
         App.hostNet.broadcast({ type: 'code-update', code: newCode });
-        // Schedule old peer removal after 60s (lets in-flight joiners complete)
         setTimeout(() => { try { App.hostNet.removeCode(oldCode); } catch {} }, 60000);
         renderHostLobby();
-        UI.toast(`Nouveau code : ${newCode}`);
+        UI.toast(`Nouveau code : ${newCode}`, { success: true });
         UI.Audio.click();
         return;
-      } catch (err) {
-        if (attempt === 4) {
-          UI.toast('Impossible de régénérer le code.', { error: true });
-          return;
-        }
-      }
+      } catch { if (attempt === 4) { UI.toast('Impossible de régénérer le code.', { error: true }); return; } }
     }
   }
 
   /* =========================================================
-     CLIENT: JOIN
+     JOIN / PUBLIC
      ========================================================= */
   function initJoin() {
     $('btn-random-pseudo-join').addEventListener('click', () => {
       UI.Audio.click();
       $('input-pseudo-join').value = suggestPseudo();
     });
-    $('input-room-code').addEventListener('input', (e) => {
-      e.target.value = e.target.value.toUpperCase();
-    });
+    $('input-room-code').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
     $('btn-join-room').addEventListener('click', () => {
       const pseudo = $('input-pseudo-join').value.trim();
       const code = $('input-room-code').value.trim().toUpperCase();
       const vp = validatePseudo(pseudo);
       if (!vp.ok) { setStatus('join-status', vp.error, 'error'); UI.Audio.error(); return; }
-      if (code.length !== 8) {
-        setStatus('join-status', 'Le code doit faire 8 caractères.', 'error');
-        UI.Audio.error(); return;
-      }
-      App.myNickname = pseudo;
-      saveNickname(pseudo);
+      if (code.length !== 8) { setStatus('join-status', 'Le code doit faire 8 caractères.', 'error'); UI.Audio.error(); return; }
+      App.myNickname = pseudo; saveNickname(pseudo);
       joinRoomByCode(code);
     });
   }
 
   async function joinRoomByCode(code) {
-    App.role = 'client';
-    App.roomCode = code;
+    App.role = 'client'; App.roomCode = code;
     setStatus('join-status', 'Connexion au salon…');
     App.clientNet = new Net.Client();
     setupClientEvents();
@@ -3092,8 +3267,7 @@ html, body {
     } catch (err) {
       setStatus('join-status', err.message || 'Connexion échouée.', 'error');
       UI.Audio.error();
-      try { App.clientNet.close(); } catch {}
-      App.clientNet = null;
+      try { App.clientNet.close(); } catch {} App.clientNet = null;
     }
   }
 
@@ -3109,84 +3283,62 @@ html, body {
     if (!msg || !msg.type) return;
     switch (msg.type) {
       case 'welcome':
-        App.clientMyId = msg.yourId;
-        App.clientHostId = msg.hostId;
-        App.myNickname = msg.assignedName || App.myNickname;
-        saveNickname(App.myNickname);
+        App.clientMyId = msg.yourId; App.clientHostId = msg.hostId;
+        App.myNickname = msg.assignedName || App.myNickname; saveNickname(App.myNickname);
         App.clientIsPublic = !!msg.isPublic;
         App.clientLastLobby = msg.lobby;
-        UI.showScreen('lobby');
-        renderClientLobby(msg.lobby);
+        UI.showScreen('lobby'); renderClientLobby(msg.lobby);
         break;
       case 'lobby':
-        App.clientLastLobby = msg.lobby;
-        App.clientIsPublic = !!msg.isPublic;
+        App.clientLastLobby = msg.lobby; App.clientIsPublic = !!msg.isPublic;
         renderClientLobby(msg.lobby);
         break;
       case 'rename-ok':
-        App.myNickname = msg.name;
-        saveNickname(msg.name);
-        UI.toast('Pseudo modifié');
+        App.myNickname = msg.name; saveNickname(msg.name);
+        UI.toast('Pseudo modifié', { success: true });
         break;
       case 'code-update':
         App.roomCode = msg.code;
-        if (App.clientLastLobby) {
-          App.clientLastLobby.roomCode = msg.code;
-          renderClientLobby(App.clientLastLobby);
-        }
-        UI.toast(`Code du salon mis à jour : ${msg.code}`);
+        if (App.clientLastLobby) { App.clientLastLobby.roomCode = msg.code; renderClientLobby(App.clientLastLobby); }
+        UI.toast(`Code du salon : ${msg.code}`);
         break;
-      case 'game-start':
-        UI.showScreen('game'); break;
+      case 'countdown':       UI.showCountdown(msg.n); UI.Audio.click(); break;
+      case 'countdown-cancel': UI.cancelCountdown(); break;
+      case 'game-start':      UI.hideCountdown(); UI.showScreen('game'); break;
       case 'state':
         App.clientLastView = msg.view;
         UI.renderGame(msg.view, makeGameHandlers('client'));
-        if (msg.view.status === 'choosing-color' && msg.view.players[0]?.id === App.clientMyId) {
-          promptInitialColorClient();
-        }
+        if (msg.view.status === 'choosing-color' && msg.view.players[0]?.id === App.clientMyId) promptInitialColorClient();
         break;
-      case 'prompt-challenge':
-        promptChallengeClient(); break;
+      case 'prompt-challenge': promptChallengeClient(); break;
       case 'game-over':
-        UI.renderGameOver(msg.view);
-        UI.showScreen('gameover');
+        UI.renderGameOver(msg.view); UI.showScreen('gameover');
         const me = msg.view.players.find(p => p.id === App.clientMyId);
-        if (me?.finishedRank === 1) UI.Audio.win();
-        else UI.Audio.lose();
+        if (me?.finishedRank === 1) UI.Audio.win(); else UI.Audio.lose();
         break;
       case 'kicked':
         UI.toast(msg.reason === 'banned' ? "Tu as été banni du salon." : "Tu as été exclu du salon.", { error: true });
-        if (msg.reason === 'banned' && App.roomCode) {
-          addBannedFrom(App.roomCode);
-        }
+        if (msg.reason === 'banned' && App.roomCode) addBannedFrom(App.roomCode);
         setTimeout(() => { cleanupNetworking(); UI.showScreen('home'); }, 1500);
         break;
-      case 'notify':
-        UI.toast(msg.message); break;
-      case 'error':
-        UI.toast('Erreur : ' + msg.message, { error: true }); break;
-      // FX cues
-      case 'fx-skip': UI.showSkipOverlay();    UI.Audio.skip(); break;
+      case 'notify': UI.toast(msg.message); break;
+      case 'error':  UI.toast('Erreur : ' + msg.message, { error: true }); UI.Audio.error(); break;
+      case 'fx-skip':    UI.showSkipOverlay();    UI.Audio.skip(); break;
       case 'fx-reverse': UI.showReverseOverlay(); UI.Audio.reverse(); break;
-      case 'fx-draw2': UI.showDraw2Overlay(msg.targetName); UI.Audio.draw(); break;
-      case 'fx-draw4': UI.showDraw4Overlay(msg.targetName); UI.Audio.draw(); break;
-      case 'fx-uno':   UI.showUnoCallOverlay(msg.name); UI.Audio.uno(); break;
+      case 'fx-draw2':   UI.showDraw2Overlay(msg.targetName); UI.Audio.cardDraw(); break;
+      case 'fx-draw4':   UI.showDraw4Overlay(msg.targetName); UI.Audio.cardDraw(); break;
+      case 'fx-uno':     UI.showUnoCallOverlay(msg.name); UI.Audio.uno(); break;
       case 'fx-cardplay': UI.Audio.cardPlay(); break;
+      case 'fx-carddraw': UI.Audio.cardDraw(); break;
     }
   }
 
   function renderClientLobby(lobby) {
     UI.renderLobby({
-      players: lobby.players,
-      hostId: lobby.hostId,
-      myId: App.clientMyId,
-      roomName: lobby.roomName,
-      roomCode: lobby.roomCode,
-      isPublic: App.clientIsPublic,
-      banList: null
-    }, {
-      onKick: () => {}, onBan: () => {}, onUnban: () => {}
-    });
+      players: lobby.players, hostId: lobby.hostId, myId: App.clientMyId,
+      roomName: lobby.roomName, roomCode: lobby.roomCode,
+      isPublic: App.clientIsPublic, banList: null
+    }, { onKick: () => {}, onBan: () => {}, onUnban: () => {} });
   }
 
   async function promptInitialColorClient() {
@@ -3198,9 +3350,6 @@ html, body {
     App.clientNet.send({ type: 'action-challenge', challenge: ans });
   }
 
-  /* =========================================================
-     PUBLIC ROOMS
-     ========================================================= */
   async function loadPublicRooms() {
     const root = $('public-rooms-list');
     root.innerHTML = '<p class="empty-state">Recherche…</p>';
@@ -3209,37 +3358,28 @@ html, body {
       const role = await dir.claimOrConnect();
       if (role === null) { UI.renderPublicRooms([], () => {}); dir.close(); return; }
       const rooms = await dir.fetchList(4000);
-      // Filter out rooms this user has been banned from
       const banned = loadBannedFrom();
       const filtered = rooms.filter(r => !banned.includes(r.code));
-      UI.renderPublicRooms(filtered, (code) => {
+      UI.renderPublicRooms(filtered, async (code) => {
         dir.close();
-        // Prompt for pseudo before joining
-        const pseudo = prompt('Ton pseudo pour rejoindre ce salon :', loadNickname() || suggestPseudo());
+        const pseudo = await UI.showPrompt({
+          title: 'Ton pseudo', message: 'Avec quel pseudo veux-tu rejoindre ?',
+          value: loadNickname() || suggestPseudo(), maxLength: 16,
+          validate: (v) => validatePseudo(v)
+        });
         if (!pseudo) return;
-        const vp = validatePseudo(pseudo);
-        if (!vp.ok) { UI.toast(vp.error, { error: true }); return; }
-        App.myNickname = pseudo.trim();
-        saveNickname(App.myNickname);
+        App.myNickname = pseudo.trim(); saveNickname(App.myNickname);
         joinRoomByCode(code);
       });
       setTimeout(() => { try { dir.close(); } catch {} }, 30000);
-    } catch {
-      UI.renderPublicRooms([], () => {});
-      try { dir.close(); } catch {}
-    }
+    } catch { UI.renderPublicRooms([], () => {}); try { dir.close(); } catch {} }
   }
 
-  /* =========================================================
-     GAME HANDLERS
-     ========================================================= */
   function makeGameHandlers(role) {
     return {
       onPlayCard: async (card) => {
         let chosenColor = null;
-        if (card.type === 'wild' || card.type === 'wild4') {
-          chosenColor = await UI.showColorPicker();
-        }
+        if (card.type === 'wild' || card.type === 'wild4') chosenColor = await UI.showColorPicker();
         if (role === 'host') applyAction('self', { type: 'action-play', cardId: card.id, chosenColor });
         else App.clientNet.send({ type: 'action-play', cardId: card.id, chosenColor });
       },
@@ -3270,7 +3410,7 @@ html, body {
     });
     $('btn-start-host').addEventListener('click', () => {
       UI.Audio.click();
-      if (App.role === 'host') hostStartGame();
+      if (App.role === 'host') startGameCountdown();
     });
     $('btn-toggle-code').addEventListener('click', () => {
       UI.Audio.click();
@@ -3285,7 +3425,7 @@ html, body {
     });
     $('btn-copy-code').addEventListener('click', async () => {
       const code = App.roomCode || App.clientLastLobby?.roomCode || '';
-      try { await navigator.clipboard.writeText(code); UI.toast('Code copié'); }
+      try { await navigator.clipboard.writeText(code); UI.toast('Code copié', { success: true }); }
       catch { UI.toast('Code : ' + code); }
     });
     $('btn-regenerate-code').addEventListener('click', () => {
@@ -3298,44 +3438,52 @@ html, body {
       if (App.isPublic && !App.directory) {
         App.directory = new Net.Directory();
         App.directory.claimOrConnect().then(() => {
-          App.directory.registerRoom({
-            code: App.roomCode, name: App.roomName,
-            players: App.lobby.players.length, max: 8
-          });
+          App.directory.registerRoom({ code: App.roomCode, name: App.roomName, players: App.lobby.players.length, max: 8 });
         }).catch(() => {});
       } else if (!App.isPublic && App.directory) {
         try { App.directory.unregisterRoom(App.roomCode); } catch {}
       }
       broadcastLobby();
     });
-    $('btn-edit-pseudo').addEventListener('click', () => {
+    $('btn-edit-pseudo').addEventListener('click', async () => {
       UI.Audio.click();
-      const current = App.myNickname;
-      const newName = prompt('Nouveau pseudo :', current);
+      const newName = await UI.showPrompt({
+        title: 'Changer mon pseudo', message: 'Nouveau pseudo (2-16 caractères)',
+        value: App.myNickname, maxLength: 16,
+        validate: (v) => validatePseudo(v)
+      });
       if (!newName) return;
-      const vp = validatePseudo(newName);
-      if (!vp.ok) { UI.toast(vp.error, { error: true }); UI.Audio.error(); return; }
-      const trimmed = newName.trim();
       if (App.role === 'host') {
         const me = App.lobby.players.find(p => p.id === 'self');
         if (me) {
-          if (App.lobby.players.some(o => o !== me && o.name === trimmed)) {
-            UI.toast('Pseudo déjà pris.', { error: true }); return;
+          if (App.lobby.players.some(o => o !== me && o.name === newName)) {
+            UI.toast('Pseudo déjà pris.', { error: true }); UI.Audio.error(); return;
           }
-          me.name = trimmed;
-          App.myNickname = trimmed;
-          saveNickname(trimmed);
+          me.name = newName; App.myNickname = newName; saveNickname(newName);
           broadcastLobby();
+          UI.toast('Pseudo modifié', { success: true });
         }
       } else if (App.role === 'client') {
-        App.clientNet.send({ type: 'rename', name: trimmed });
+        App.clientNet.send({ type: 'rename', name: newName });
       }
+    });
+    $('btn-edit-room-name').addEventListener('click', async () => {
+      if (App.role !== 'host') return;
+      UI.Audio.click();
+      const newName = await UI.showPrompt({
+        title: 'Changer le nom du salon', message: 'Nouveau nom (1-28 caractères)',
+        value: App.roomName, maxLength: 28,
+        validate: (v) => validateRoomName(v)
+      });
+      if (!newName) return;
+      App.roomName = newName;
+      broadcastLobby();
+      UI.toast('Nom du salon modifié', { success: true });
     });
   }
 
   function initGameControls() {
     $('draw-pile').addEventListener('click', () => {
-      UI.Audio.click();
       if (App.role === 'host') applyAction('self', { type: 'action-draw' });
       else if (App.role === 'client') App.clientNet.send({ type: 'action-draw' });
     });
@@ -3349,17 +3497,18 @@ html, body {
       if (App.role === 'host') applyAction('self', { type: 'action-uno' });
       else if (App.role === 'client') App.clientNet.send({ type: 'action-uno' });
     });
-    $('btn-leave-game').addEventListener('click', () => {
-      if (confirm('Quitter la partie ?')) {
-        cleanupNetworking();
-        UI.showScreen('home');
-      }
+    $('btn-leave-game').addEventListener('click', async () => {
+      const ok = await UI.showConfirm({ title: 'Quitter la partie ?', message: 'Tu seras déconnecté du salon.', okLabel: 'Quitter', danger: true });
+      if (!ok) return;
+      UI.Audio.back();
+      cleanupNetworking();
+      UI.showScreen('home');
     });
   }
 
   function initGameOverControls() {
     $('btn-back-home').addEventListener('click', () => {
-      UI.Audio.click();
+      UI.Audio.back();
       cleanupNetworking();
       UI.showScreen('home');
     });
@@ -3374,10 +3523,7 @@ html, body {
   }
 
   function initPublicRoomsControls() {
-    $('btn-refresh-public').addEventListener('click', () => {
-      UI.Audio.click();
-      loadPublicRooms();
-    });
+    $('btn-refresh-public').addEventListener('click', () => { UI.Audio.click(); loadPublicRooms(); });
   }
 
   function initAudioControls() {
@@ -3385,18 +3531,9 @@ html, body {
     const music = $('btn-toggle-music');
     const masterSlider = $('slider-master');
     const musicSlider  = $('slider-music');
-
-    // Restore saved volumes
     const vols = loadVolumes();
-    if (masterSlider) {
-      masterSlider.value = Math.round(vols.master * 100);
-      UI.Audio.setMasterVolume(vols.master);
-    }
-    if (musicSlider) {
-      musicSlider.value = Math.round(vols.music * 100);
-      UI.Audio.setMusicVolume(vols.music);
-    }
-
+    if (masterSlider) { masterSlider.value = Math.round(vols.master * 100); UI.Audio.setMasterVolume(vols.master); }
+    if (musicSlider)  { musicSlider.value  = Math.round(vols.music  * 100); UI.Audio.setMusicVolume(vols.music);  }
     function updateBtns() {
       sfx.textContent = UI.Audio.enabled ? '🔊 SFX' : '🔇 SFX';
       music.textContent = UI.Audio.musicOn ? '🎵 ON' : '🎵 OFF';
@@ -3424,38 +3561,22 @@ html, body {
     updateBtns();
   }
 
-  /* =========================================================
-     BOOTSTRAP
-     ========================================================= */
   function bootstrap() {
     try {
-      initHome();
-      initCreate();
-      initJoin();
-      initLobbyControls();
-      initGameControls();
-      initGameOverControls();
-      initPublicRoomsControls();
-      initAudioControls();
+      initHome(); initCreate(); initJoin();
+      initLobbyControls(); initGameControls(); initGameOverControls();
+      initPublicRoomsControls(); initAudioControls();
     } catch (err) {
       console.error('Bootstrap error:', err);
       const banner = document.getElementById('boot-error');
-      if (banner) {
-        banner.style.display = 'block';
-        banner.textContent = 'Erreur au démarrage : ' + (err && err.message ? err.message : err);
-      }
+      if (banner) { banner.style.display = 'block'; banner.textContent = 'Erreur au démarrage : ' + (err && err.message ? err.message : err); }
     }
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootstrap);
-  } else {
-    bootstrap();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootstrap);
+  else bootstrap();
 
   window.addEventListener('beforeunload', () => {
-    if (App.directory && App.roomCode) {
-      try { App.directory.unregisterRoom(App.roomCode); } catch {}
-    }
+    if (App.directory && App.roomCode) try { App.directory.unregisterRoom(App.roomCode); } catch {}
     cleanupNetworking();
   });
 })();
