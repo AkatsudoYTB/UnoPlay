@@ -2228,10 +2228,51 @@ body.chat-is-open .audio-bar { right: 358px; }
   const PEER_CONFIG = {
     debug: 1,
     config: {
+      // STUN: lets each peer discover its own public IP through NAT.
+      // Sufficient for ~70-85% of internet connections (cone-type NATs).
+      // TURN: relay server used when direct P2P is impossible due to
+      // symmetric NAT (very common on mobile carriers, corporate networks,
+      // some home routers) or aggressive firewalls. WITHOUT TURN, users
+      // behind those networks can ONLY connect on the same LAN — exactly
+      // the bug we're fixing here.
+      //
+      // We use Open Relay Project (https://openrelayproject.org) — a free,
+      // publicly available TURN server hosted by Metered.ca. Credentials
+      // are intentionally public. Multiple ports/transports (80, 443,
+      // TLS-443) maximize the chance of bypassing strict firewalls that
+      // block UDP or non-standard ports.
+      //
+      // If you ever hit rate limits or downtime, sign up at metered.ca
+      // for a free 50 GB/month account with your own credentials, or
+      // self-host a coturn server.
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' }
-      ]
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turns:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ],
+      // 'all' = try direct (STUN) first, fall back to relay (TURN) if needed.
+      // Use 'relay' to FORCE relaying through TURN (useful for debugging).
+      iceTransportPolicy: 'all'
     }
   };
 
