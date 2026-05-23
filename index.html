@@ -517,7 +517,16 @@ body.chat-is-open .audio-bar { right: 358px; }
   cursor: pointer;
   box-shadow: var(--shadow-sm), inset 0 0 0 4px #fff;
 }
-.card-back .card-inner { position: relative; }
+.card-back .card-inner {
+  position: relative;
+  /* v11.1: undo the v11 .card-inner overflow:hidden for the back-of-card
+     specifically. The red oval is rendered via a ::before with width:150%
+     and negative left offset; it needs to overflow its (small, relative-
+     positioned) parent and rely on the parent .card's clip-path/overflow
+     for the final clipping to the card rectangle. Without this override,
+     the oval got clipped to a tiny box around the badge text. */
+  overflow: visible;
+}
 .card-back .card-inner::before {
   /* Bigger red oval, closer to real UNO card back */
   content: ''; position: absolute;
@@ -1179,7 +1188,7 @@ body.chat-is-open .audio-bar { right: 358px; }
 }
 #btn-leave-game:hover { background: var(--danger); color: #fff; }
 @media (max-width: 600px) {
-  #btn-leave-game { padding: 4px 8px; font-size: 11px; }
+  #btn-leave-game { padding: 6px 10px; font-size: 12px; }
 }
 
   </style>
@@ -3854,10 +3863,18 @@ body.chat-is-open .audio-bar { right: 358px; }
       // music files (music.mp3, music2.mp3, ..., music10.mp3) loaded separately
     },
     files: {},  // name -> HTMLAudioElement, or false if failed
-    musicFiles: [],   // HTMLAudioElement[] (only successfully loaded ones)
+    musicFiles: [],   // HTMLAudioElement[] (only successfully loaded ones) — fallback path
     _currentMusic: null,
     _filesAttempted: false,
     _longSounds: [],  // v11: refs to long-playing clones (win/lose) so we can stop them
+    // v11.1: Web Audio API gapless music loop (decodeAudioData + AudioBufferSourceNode).
+    // The AudioBufferSourceNode's `loop=true` is sample-accurate — it restarts the
+    // buffer at the exact end sample, eliminating the MP3 padding gap that
+    // HTMLAudioElement.loop suffers from.
+    _musicBuffers: [],        // AudioBuffer[]
+    _musicSource: null,       // currently playing AudioBufferSourceNode
+    _musicBuffersAttempted: false,
+    _lastMusicBufferIdx: -1,
 
     // v11: PRELOAD all audio files immediately at boot (called from app bootstrap).
     // Does NOT create an AudioContext (that needs user interaction per browser policy).
@@ -3904,6 +3921,65 @@ body.chat-is-open .audio-bar { right: 358px; }
       }
       this._longSounds.length = 0;
     },
+    // v11.1: decode all music files into AudioBuffers (one-time, lazy on first
+    // startMusic call). Sample-accurate loop on these eliminates the gap-at-end
+    // issue some users hit with HTMLAudio.loop on padded MP3s.
+    async _decodeAllMusic() {
+      if (this._musicBuffersAttempted) return;
+      this._musicBuffersAttempted = true;
+      if (!this.ctx) this._initContext();
+      if (!this.ctx || !this.ctx.decodeAudioData) return;
+      for (let i = 1; i <= 10; i++) {
+        const fn = i === 1 ? 'music.mp3' : 'music' + i + '.mp3';
+        try {
+          const res = await fetch('audios/' + fn);
+          if (!res.ok) continue;
+          const ab = await res.arrayBuffer();
+          // decodeAudioData has both promise- and callback-based variants
+          // depending on the browser; wrap in a Promise that covers both.
+          const decoded = await new Promise((resolve, reject) => {
+            try {
+              const p = this.ctx.decodeAudioData(ab, resolve, reject);
+              if (p && typeof p.then === 'function') p.then(resolve, reject);
+            } catch (e) { reject(e); }
+          });
+          if (decoded) {
+            this._musicBuffers.push(decoded);
+            try { console.log('[UnoPlay] Music buffer decoded: audios/' + fn); } catch {}
+          }
+        } catch {
+          // file missing or decode failed — silently skip
+        }
+      }
+    },
+
+    _playMusicBuffer() {
+      if (!this.musicOn) return;
+      if (!this.ctx || !this.musicGain) return;
+      if (this._musicBuffers.length === 0) return;
+      this._stopMusicBuffer();
+      // Pick a track that differs from the last one when possible.
+      let idx = Math.floor(Math.random() * this._musicBuffers.length);
+      if (this._musicBuffers.length > 1 && idx === this._lastMusicBufferIdx) {
+        idx = (idx + 1) % this._musicBuffers.length;
+      }
+      this._lastMusicBufferIdx = idx;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._musicBuffers[idx];
+      src.loop = true;   // sample-accurate gapless loop
+      src.connect(this.musicGain);
+      try { src.start(0); } catch (e) { try { console.warn('[UnoPlay] musicBuffer start failed:', e); } catch {} }
+      this._musicSource = src;
+    },
+
+    _stopMusicBuffer() {
+      if (this._musicSource) {
+        try { this._musicSource.stop(); } catch {}
+        try { this._musicSource.disconnect(); } catch {}
+        this._musicSource = null;
+      }
+    },
+
     _tryLoadMusic(filename) {
       try {
         const a = new window.Audio('audios/' + filename);
@@ -4046,19 +4122,38 @@ body.chat-is-open .audio-bar { right: 358px; }
     },
 
     /* ---- music ---- */
-    startMusic() {
+    async startMusic() {
       if (this.musicOn) return;
       this.init();
       this.musicOn = true;
+      // v11.1: prefer Web Audio buffer path (sample-accurate gapless loop).
+      // Decode happens lazily on the first start, then is cached for the
+      // rest of the session. If decode fails (e.g. file missing, CORS,
+      // unsupported MP3), we fall back to the HTMLAudio path below.
+      if (!this._musicBuffersAttempted) {
+        try { await this._decodeAllMusic(); } catch {}
+      }
+      if (!this.musicOn) return;   // user toggled off during decode
+      if (this._musicBuffers.length > 0) {
+        this._playMusicBuffer();
+        return;
+      }
+      // Fallback: HTMLAudio with native loop (may have a gap on some MP3s
+      // but is the best we can do if decoding isn't available).
       if (this.musicFiles.length > 0) {
         this._playNextMusic();
         return;
       }
-      // No files loaded yet — start synth, retry file shortly
+      // No real audio at all — synth + retry on file load.
       this._synthMusicStart();
       const retry = () => {
         if (!this.musicOn) return;
-        if (this.musicFiles.length > 0) {
+        if (this._musicBuffers.length > 0) {
+          for (const n of this.musicNodes) try { n.stop(); } catch {}
+          this.musicNodes = [];
+          if (this._musicTimer) { clearTimeout(this._musicTimer); this._musicTimer = null; }
+          this._playMusicBuffer();
+        } else if (this.musicFiles.length > 0) {
           for (const n of this.musicNodes) try { n.stop(); } catch {}
           this.musicNodes = [];
           if (this._musicTimer) { clearTimeout(this._musicTimer); this._musicTimer = null; }
@@ -4071,6 +4166,7 @@ body.chat-is-open .audio-bar { right: 358px; }
     },
     stopMusic() {
       this.musicOn = false;
+      this._stopMusicBuffer();   // v11.1: stop Web Audio source
       if (this._currentMusic) {
         try { this._currentMusic.pause(); this._currentMusic.currentTime = 0; } catch {}
         this._currentMusic = null;
@@ -4291,6 +4387,10 @@ body.chat-is-open .audio-bar { right: 358px; }
   }
 
   function cleanupNetworking() {
+    // v11.1: stop any long-playing SFX (win/lose) on every cleanup path —
+    // covers leave-game, back-home, browser back-button (popstate), host
+    // disconnect, etc. This is the single chokepoint so we can't miss one.
+    try { if (UnoUI && UnoUI.Audio && UnoUI.Audio.stopLong) UnoUI.Audio.stopLong(); } catch {}
     if (App.countdownInterval) { clearInterval(App.countdownInterval); App.countdownInterval = null; UI.hideCountdown(); }
     if (App.publicRefreshInterval) { clearInterval(App.publicRefreshInterval); App.publicRefreshInterval = null; }
     if (App._directoryHeartbeat) { clearInterval(App._directoryHeartbeat); App._directoryHeartbeat = null; }
@@ -4658,8 +4758,13 @@ body.chat-is-open .audio-bar { right: 358px; }
         break;
       }
       case 'rematch': {
+        // v11.1: accept rematch requests from ANY player (was previously
+        // restricted to `p.id === App.lobby.hostId`, which could never be
+        // true for a client — the host calls doRematch() directly, never
+        // via this message. So client rematch requests were silently
+        // dropped, leaving the client stuck on the gameover screen).
         const p = App.lobby.players.find(p => p.peerId === peerId);
-        if (p && p.id === App.lobby.hostId) doRematch();
+        if (p) doRematch();
         break;
       }
     }
@@ -4668,6 +4773,7 @@ body.chat-is-open .audio-bar { right: 358px; }
   function serializeLobby() {
     return {
       roomName: App.roomName, roomCode: App.roomCode, hostId: App.lobby.hostId, isPublic: App.isPublic,
+      status: App.lobby.status,   // v11.1: needed so clients detect rematch (game-over → lobby)
       players: App.lobby.players.map(p => ({ id: p.id, name: p.name, ready: p.ready, connected: p.connected }))
     };
   }
@@ -4950,6 +5056,7 @@ body.chat-is-open .audio-bar { right: 358px; }
   }
 
   function doRematch() {
+    try { UI.Audio.stopLong(); } catch {}   // v11.1: kill win/lose immediately
     App.lobby.status = 'lobby';
     for (const p of App.lobby.players) p.ready = false;
     App.game = null;
@@ -5065,6 +5172,14 @@ body.chat-is-open .audio-bar { right: 358px; }
       case 'lobby':
         App.clientLastLobby = msg.lobby; App.clientIsPublic = !!msg.isPublic;
         renderClientLobby(msg.lobby);
+        // v11.1: detect rematch — if host transitioned the lobby back to
+        // 'lobby' status while we were viewing gameover/game, navigate us
+        // there too and cut any win/lose sound that was still playing.
+        if (msg.lobby && msg.lobby.status === 'lobby'
+            && (App.currentScreen === 'gameover' || App.currentScreen === 'game')) {
+          try { UI.Audio.stopLong(); } catch {}
+          goTo('lobby');
+        }
         break;
       case 'rename-ok':
         App.myNickname = msg.name; saveNickname(msg.name);
@@ -5309,7 +5424,9 @@ body.chat-is-open .audio-bar { right: 358px; }
       // Client-side guard: prevent the visual flash that happens when the
       // server rejects a duplicate draw. If we already drew this turn,
       // show a toast instead of sending the action.
-      const view = (App.role === 'host')
+      // v11.1: solo uses the local App.game like host, NOT a stale
+      // App.clientLastView (which can leak from a prior client session).
+      const view = (App.role === 'host' || App.role === 'solo')
         ? (App.game ? buildView(App.game, 'self') : null)
         : App.clientLastView;
       if (view) {
@@ -5330,16 +5447,19 @@ body.chat-is-open .audio-bar { right: 358px; }
         }
       }
       if (App.role === 'host') applyAction('self', { type: 'action-draw' });
+      else if (App.role === 'solo') soloPlayerAction({ type: 'action-draw' });   // v11.1
       else if (App.role === 'client') App.clientNet.send({ type: 'action-draw' });
     });
     $('btn-pass').addEventListener('click', () => {
       UI.Audio.click();
       if (App.role === 'host') applyAction('self', { type: 'action-pass' });
+      else if (App.role === 'solo') soloPlayerAction({ type: 'action-pass' });   // v11.1
       else if (App.role === 'client') App.clientNet.send({ type: 'action-pass' });
     });
     $('btn-uno').addEventListener('click', () => {
       UI.Audio.click();
       if (App.role === 'host') applyAction('self', { type: 'action-uno' });
+      else if (App.role === 'solo') soloPlayerAction({ type: 'action-uno' });    // v11.1
       else if (App.role === 'client') App.clientNet.send({ type: 'action-uno' });
     });
     $('btn-leave-game').addEventListener('click', async () => {
@@ -5462,6 +5582,10 @@ body.chat-is-open .audio-bar { right: 358px; }
     }
     App.myNickname = pseudo; saveNickname(pseudo);
     App.role = 'solo';
+    // v11.1: clear leftover client state from any prior session so the
+    // solo guards (draw-pile, etc.) don't read stale clientLastView.
+    App.clientLastView = null;
+    App.clientLastLobby = null;
     App.roomName = 'Mode solo';
     App.lobby = {
       players: [{ id: 'self', peerId: 'self', name: pseudo, ready: true, connected: true }]
@@ -5557,6 +5681,35 @@ body.chat-is-open .audio-bar { right: 358px; }
     else if (card.type === 'reverse') { UI.showReverseOverlay(); UI.Audio.reverse(); }
     else if (card.type === 'draw2')   { UI.showDraw2Overlay(target); UI.Audio.cardDraw(); }
     else if (card.type === 'wild4')   { UI.showDraw4Overlay(target); UI.Audio.cardDraw(); }
+  }
+
+  /* v11.1: Solo mode — execute the human's draw/pass/uno locally against
+     App.game (the same Rules engine the host uses). Previously, these
+     buttons did nothing in solo because the global handlers only branched
+     on host/client roles. */
+  function soloPlayerAction(msg) {
+    if (App.role !== 'solo' || !App.game) return;
+    let result;
+    switch (msg.type) {
+      case 'action-draw':
+        result = Rules.drawForCurrentPlayer(App.game, 'self');
+        if (!result.ok) { UI.toast(result.error || 'Action invalide.', { error: true }); UI.Audio.error(); return; }
+        UI.Audio.cardDraw();
+        break;
+      case 'action-pass':
+        result = Rules.passAfterDraw(App.game, 'self');
+        if (!result || !result.ok) { UI.toast((result && result.error) || 'Action invalide.', { error: true }); UI.Audio.error(); return; }
+        break;
+      case 'action-uno':
+        result = Rules.callUno(App.game, 'self');
+        if (result && !result.ok) { UI.toast(result.error || 'Action invalide.', { error: true }); UI.Audio.error(); return; }
+        UI.Audio.uno();
+        break;
+      default:
+        return;
+    }
+    renderSoloGameView();
+    if (App.game.status !== 'game-over') maybeRunBotTurn();
   }
 
   function maybeRunBotTurn() {
