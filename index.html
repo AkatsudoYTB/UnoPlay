@@ -58,17 +58,36 @@ html, body {
   border-radius: 8px;
   border: 1px solid var(--border);
   backdrop-filter: blur(6px);
+  align-items: center;
 }
-.audio-group { display: flex; align-items: center; gap: 4px; }
+.audio-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+}
 .audio-group input[type="range"] {
   width: 70px;
   height: 4px;
+  margin: 0;
+  padding: 0;
   accent-color: var(--accent);
   cursor: pointer;
+  vertical-align: middle;
+}
+.audio-group .btn-icon-sm {
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  white-space: nowrap;
 }
 @media (max-width: 600px) {
   .audio-bar { gap: 6px; padding: 4px 6px; top: 4px; right: 4px; }
+  .audio-group { gap: 4px; height: 26px; }
   .audio-group input[type="range"] { width: 48px; }
+  .audio-group .btn-icon-sm { height: 22px; font-size: 10px; padding: 2px 6px; }
 }
 .btn-icon-sm {
   background: var(--bg-2);
@@ -217,8 +236,16 @@ html, body {
   font-family: ui-monospace, monospace;
   font-size: 16px;
   letter-spacing: .2em;
+  /* Fixed width so toggling visibility doesn't shift the buttons next to it */
+  display: inline-block;
+  min-width: 168px;
+  text-align: center;
+  box-sizing: border-box;
 }
 .hidden-code { letter-spacing: .35em; }
+@media (max-width: 600px) {
+  .room-code { min-width: 140px; font-size: 14px; padding: 5px 10px; }
+}
 
 .visibility-badge {
   padding: 3px 10px;
@@ -754,7 +781,345 @@ html, body {
   vertical-align: middle;
 }
 
-</style>
+/* =========================================================
+   v10 — Card overflow fix + improved current-color indicator
+   ========================================================= */
+/* Wild card playable indicator (chosen color circle) lived above the card
+   and overflowed onto neighbours. Clip inside the card. */
+.card { overflow: hidden; }
+.card .card-color-dot {
+  position: absolute;
+  bottom: 6px; right: 6px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  z-index: 4;
+  box-shadow: 0 1px 3px rgba(0,0,0,.4);
+}
+.card .card-color-dot.red    { background: var(--uno-red); }
+.card .card-color-dot.blue   { background: var(--uno-blue); }
+.card .card-color-dot.green  { background: var(--uno-green); }
+.card .card-color-dot.yellow { background: var(--uno-yellow); }
+
+/* Improved "current color" pill in the topbar */
+.current-color-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.current-color-pill .dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.25);
+}
+.current-color-pill.red    { background: rgba(229,57,53,.18);  border-color: var(--uno-red);    color: #ffb4b1; }
+.current-color-pill.red    .dot { background: var(--uno-red); }
+.current-color-pill.blue   { background: rgba(30,136,229,.18); border-color: var(--uno-blue);   color: #a9d3fa; }
+.current-color-pill.blue   .dot { background: var(--uno-blue); }
+.current-color-pill.green  { background: rgba(67,160,71,.18);  border-color: var(--uno-green);  color: #b4ebb6; }
+.current-color-pill.green  .dot { background: var(--uno-green); }
+.current-color-pill.yellow { background: rgba(253,216,53,.22); border-color: var(--uno-yellow); color: #fff09a; }
+.current-color-pill.yellow .dot { background: var(--uno-yellow); }
+
+/* =========================================================
+   v10 — Pseudo placeholder styling (gray)
+   ========================================================= */
+.pseudo-placeholder::placeholder { color: var(--text-dim); opacity: 1; font-style: italic; }
+.pseudo-placeholder::-webkit-input-placeholder { color: var(--text-dim); }
+.pseudo-placeholder::-moz-placeholder { color: var(--text-dim); opacity: 1; }
+
+/* =========================================================
+   v10 — Chat panel (right-side toggleable)
+   ========================================================= */
+#chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 340px;
+  max-width: 92vw;
+  height: 100vh;
+  background: var(--bg-2);
+  border-left: 1px solid var(--border);
+  box-shadow: -6px 0 20px rgba(0,0,0,.45);
+  display: flex;
+  flex-direction: column;
+  z-index: 450;
+  transform: translateX(100%);
+  transition: transform .25s cubic-bezier(.2,.7,.3,1);
+}
+#chat-panel.open { transform: translateX(0); }
+#chat-panel .chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--border);
+}
+#chat-panel .chat-header h3 { margin: 0; font-size: 15px; }
+#chat-panel .chat-close {
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 18px; line-height: 1;
+}
+#chat-panel .chat-close:hover { color: var(--text); }
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 13px;
+}
+.chat-msg {
+  background: var(--bg-3);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+.chat-msg .chat-author { font-weight: 700; margin-right: 6px; color: var(--accent); font-size: 12px; }
+.chat-msg.self .chat-author { color: var(--uno-blue); }
+.chat-msg .chat-time { font-size: 10px; color: var(--text-dim); margin-left: 6px; }
+.chat-msg.log {
+  background: transparent;
+  color: var(--uno-yellow);
+  font-style: italic;
+  text-align: center;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+#chat-input-area {
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  background: var(--bg-3);
+}
+#chat-input-row {
+  display: flex; gap: 6px;
+}
+#chat-input {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  min-height: 36px;
+  max-height: 80px;
+}
+#chat-input:focus { border-color: var(--accent); }
+#chat-send {
+  padding: 0 12px;
+  font-weight: 700;
+}
+#chat-input-meta {
+  font-size: 10px; color: var(--text-dim);
+  display: flex; justify-content: space-between;
+  margin-top: 4px;
+}
+.chat-cooldown { color: var(--danger); font-weight: 700; }
+
+#chat-presets {
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50%;
+  overflow-y: auto;
+}
+.chat-preset-group .preset-label {
+  font-size: 11px; color: var(--text-dim); margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.chat-preset-group .preset-buttons {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.chat-preset-btn {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chat-preset-btn:hover { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+
+#chat-toggle-btn {
+  position: fixed;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  z-index: 440;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: var(--shadow-sm);
+  display: none; /* shown only on game screen via JS */
+}
+#chat-toggle-btn:hover { background: var(--accent); color: #1a1a1a; }
+#chat-toggle-btn.has-unread::after {
+  content: attr(data-unread);
+  position: absolute;
+  top: -6px; right: -6px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  border-radius: 10px;
+  padding: 1px 5px;
+  min-width: 16px;
+  text-align: center;
+  border: 2px solid var(--bg);
+}
+
+@media (max-width: 600px) {
+  #chat-panel { width: 88vw; }
+  #chat-toggle-btn { right: 4px; padding: 6px 8px; font-size: 16px; }
+}
+
+/* =========================================================
+   v10 — Crash / connection error modal
+   ========================================================= */
+.crash-modal {
+  z-index: 700;
+}
+.crash-modal .modal-content {
+  border-color: var(--danger);
+  min-width: 320px;
+  max-width: 460px;
+}
+.crash-modal h3 { color: var(--danger); margin-top: 0; }
+.crash-modal .crash-code {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin: 10px 0;
+  word-break: break-all;
+  color: var(--danger);
+}
+.crash-modal .crash-countdown {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* =========================================================
+   v10 — Opponents "Uno table" view (fan of face-down cards)
+   ========================================================= */
+.opponent .opp-fan {
+  position: relative;
+  height: 50px;
+  display: flex; justify-content: center; align-items: flex-end;
+  margin-top: 6px;
+}
+.opponent .opp-fan .fan-card {
+  position: absolute;
+  bottom: 0;
+  width: 26px; height: 38px;
+  background: #0a0a0a;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.5);
+  background-image: radial-gradient(ellipse at center, var(--uno-red) 0 38%, transparent 40%);
+  transform-origin: bottom center;
+  transition: transform .25s ease;
+}
+.opponent.active .opp-fan .fan-card { box-shadow: 0 2px 8px rgba(240,180,0,.5); }
+.opponent .opp-bot-badge {
+  position: absolute;
+  top: -6px; left: -6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  border-radius: 10px;
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+/* =========================================================
+   v10 — Solo / bot setup panel
+   ========================================================= */
+.bot-row {
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 0;
+  padding: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.bot-row input[type="text"] {
+  flex: 1;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 13px;
+  outline: none;
+}
+.bot-row select {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.bot-row .bot-remove {
+  background: var(--bg-3); border: 1px solid var(--border);
+  color: var(--danger); cursor: pointer; padding: 4px 8px;
+  border-radius: var(--radius-sm); font-size: 12px;
+}
+.bot-row .bot-remove:hover { background: var(--danger); color: #fff; }
+
+/* =========================================================
+   v10 — Responsive tweaks for game
+   ========================================================= */
+@media (max-width: 900px) {
+  .game-topbar { flex-wrap: wrap; gap: 4px; }
+  .topbar-center { order: 3; width: 100%; justify-content: center; }
+}
+@media (max-width: 600px) {
+  :root { --card-w: 60px; --card-h: 90px; }
+  .game-topbar { padding: 6px 8px; font-size: 12px; }
+  .opponents { gap: 6px; }
+  .opponent { min-width: 80px; padding: 5px; font-size: 11px; }
+  .opp-name { font-size: 11px; }
+  .opp-meta { font-size: 10px; }
+  .my-hand .card { margin-left: -38px; }
+  .board-center { gap: 18px; }
+  .turn-indicator { font-size: 14px; }
+  .bottom-bar { padding: 10px 4px 12px; }
+  .btn { padding: 10px 14px; font-size: 14px; }
+  .btn-large { padding: 12px; }
+}
+@media (max-width: 400px) {
+  :root { --card-w: 52px; --card-h: 78px; }
+  .my-hand .card { margin-left: -32px; }
+  .panel { padding: 18px 14px; margin-top: 3vh; }
+  .logo { font-size: 38px; }
+  .home-wrap { margin-top: 4vh; }
+}
+
+  </style>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
@@ -791,13 +1156,14 @@ html, body {
     <div class="home-wrap">
       <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
       <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
-      <p style="font-size:10px;color:#444;margin-top:-8px;">build v8</p>
+      <p style="font-size:10px;color:#444;margin-top:-8px;">build v10</p>
 
       <div class="card-panel">
         <div class="home-buttons">
           <button id="btn-goto-create" class="btn btn-primary btn-large">Créer une partie</button>
           <button id="btn-goto-join" class="btn btn-secondary btn-large">Rejoindre via code</button>
           <button id="btn-goto-public" class="btn btn-ghost btn-large">Salons publics</button>
+          <button id="btn-goto-solo" class="btn btn-ghost btn-large">Mode solo (vs bots)</button>
         </div>
         <p class="hint">
           Le créateur héberge la partie depuis son navigateur (P2P).<br>
@@ -814,7 +1180,7 @@ html, body {
       <label class="field">
         <span>Ton pseudo</span>
         <div class="field-row">
-          <input id="input-pseudo-create" type="text" maxlength="16" placeholder="Ton pseudo" autocomplete="off" />
+          <input id="input-pseudo-create" class="pseudo-placeholder" type="text" maxlength="16" placeholder="Ton pseudo" autocomplete="off" />
           <button id="btn-random-pseudo-create" class="btn-icon" title="Pseudo aléatoire">🎲</button>
         </div>
       </label>
@@ -825,6 +1191,14 @@ html, body {
       <label class="checkbox">
         <input id="input-room-public" type="checkbox" checked />
         <span>Salon public (visible dans la liste)</span>
+      </label>
+      <label class="field">
+        <span>Mode du chat</span>
+        <select id="input-chat-mode">
+          <option value="normal">Normal (texte libre, 100 caractères)</option>
+          <option value="simple">Simple (messages prédéfinis uniquement)</option>
+          <option value="off">Désactivé</option>
+        </select>
       </label>
       <button id="btn-create-room" class="btn btn-primary btn-large">Créer le salon</button>
       <p id="create-status" class="status-line"></p>
@@ -838,7 +1212,7 @@ html, body {
       <label class="field">
         <span>Ton pseudo</span>
         <div class="field-row">
-          <input id="input-pseudo-join" type="text" maxlength="16" placeholder="Ton pseudo" autocomplete="off" />
+          <input id="input-pseudo-join" class="pseudo-placeholder" type="text" maxlength="16" placeholder="Ton pseudo" autocomplete="off" />
           <button id="btn-random-pseudo-join" class="btn-icon" title="Pseudo aléatoire">🎲</button>
         </div>
       </label>
@@ -906,7 +1280,7 @@ html, body {
       </div>
       <div class="topbar-center">
         <span id="game-direction">⤵ Sens horaire</span>
-        <span id="game-current-color" class="current-color"></span>
+        <span id="game-current-color-pill" class="current-color-pill"><span class="dot"></span><span class="label">—</span></span>
       </div>
       <div class="topbar-right">
         <button id="btn-leave-game" class="btn-link">Quitter</button>
@@ -956,6 +1330,48 @@ html, body {
     <div id="toast" class="toast hidden"></div>
   </section>
 
+  <section id="screen-solo" class="screen">
+    <div class="panel">
+      <button class="btn-back" data-back="home">← Retour</button>
+      <h2>Mode solo</h2>
+      <label class="field">
+        <span>Ton pseudo</span>
+        <div class="field-row">
+          <input id="input-pseudo-solo" class="pseudo-placeholder" type="text" maxlength="16" placeholder="Ton pseudo" autocomplete="off" />
+          <button id="btn-random-pseudo-solo" class="btn-icon" title="Pseudo aléatoire">🎲</button>
+        </div>
+      </label>
+      <label class="field">
+        <span>Adversaires (1 à 3 bots)</span>
+      </label>
+      <div id="bot-list"></div>
+      <button id="btn-add-bot" class="btn btn-ghost" style="margin-top:6px;">+ Ajouter un bot</button>
+      <button id="btn-start-solo" class="btn btn-primary btn-large" style="margin-top:14px;">Lancer la partie</button>
+      <p id="solo-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- Chat side panel + toggle button (only visible in-game) -->
+  <button id="chat-toggle-btn" title="Ouvrir le chat" data-unread="0">💬</button>
+  <aside id="chat-panel">
+    <div class="chat-header">
+      <h3>Chat</h3>
+      <button class="chat-close" id="chat-close-btn" title="Fermer">✕</button>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-presets"></div>
+    <div id="chat-input-area">
+      <div id="chat-input-row">
+        <textarea id="chat-input" maxlength="100" placeholder="Écris un message (100 max)…"></textarea>
+        <button id="chat-send" class="btn btn-primary">Envoyer</button>
+      </div>
+      <div id="chat-input-meta">
+        <span id="chat-char-count">0/100</span>
+        <span id="chat-cooldown-text"></span>
+      </div>
+    </div>
+  </aside>
+
   <section id="screen-gameover" class="screen">
     <div class="panel">
       <h2 id="gameover-title">Partie terminée</h2>
@@ -967,10 +1383,11 @@ html, body {
       </div>
     </div>
   </section>
-    <script>
-/* ===== js/cards.js ===== */
+
+  <!-- ===== inlined: js/cards.js ===== -->
+  <script>
 /* =========================================================
-   UnoPlay — Cards / Deck / Utilities
+   UnoPlay — Cards / Deck / Utilities (v9)
    Exposes window.UnoCards
    ========================================================= */
 
@@ -1037,95 +1454,266 @@ html, body {
   }
 
   /* ---------------------------------------------------------
-     Random Xbox-style pseudo
+     Random Xbox-style pseudo — guaranteed <= 16 characters
      --------------------------------------------------------- */
-  const ADJECTIVES = [
-    'Vif', 'Rusé', 'Brave', 'Sage', 'Léger', 'Sombre', 'Doré', 'Argenté',
-    'Joyeux', 'Calme', 'Furtif', 'Rapide', 'Mystique', 'Royal', 'Sauvage',
-    'Cosmique', 'Glacial', 'Ardent', 'Stellaire', 'Solaire', 'Nocturne',
-    'Astral', 'Mortel', 'Béni', 'Fou', 'Pirate', 'Légendaire', 'Tempête',
-    'Mystère', 'Tonnerre', 'Éclair', 'Cyber', 'Ninja', 'Turbo', 'Nova', 'Ombre'
+  // Short adjectives + nouns so the final string with 3-digit suffix
+  // always fits within 16 characters.
+  const SHORT_ADJ = [
+    'Vif','Rusé','Brave','Sage','Doré','Joyeux','Fou','Cyber',
+    'Ninja','Turbo','Nova','Ombre','Pirate','Royal','Stellar',
+    'Astral','Mortel','Beni','Solaire','Ardent','Tempete',
+    'Tonnerre','Eclair','Mystic','Iron','Rapid','Cosmic',
+    'Glacial','Furtif','Nocturne'
   ];
-  const NOUNS = [
-    'Loup', 'Tigre', 'Dragon', 'Phénix', 'Renard', 'Faucon', 'Lynx', 'Ours',
-    'Aigle', 'Cobra', 'Panda', 'Corbeau', 'Sphinx', 'Hibou', 'Cerf', 'Lion',
-    'Tornade', 'Comète', 'Étoile', 'Lune', 'Soleil', 'Orage', 'Volcan',
-    'Phantom', 'Samurai', 'Viking', 'Sorcier', 'Chasseur', 'Guerrier',
-    'Pixel', 'Robot', 'Météore', 'Banshee', 'Kraken'
+  const SHORT_NOUN = [
+    'Loup','Tigre','Dragon','Phenix','Renard','Faucon','Lynx','Ours',
+    'Aigle','Cobra','Panda','Sphinx','Hibou','Cerf','Lion','Comete',
+    'Etoile','Lune','Orage','Volcan','Robot','Kraken','Samurai',
+    'Viking','Sorcier','Pixel','Meteore','Banshee','Chasseur'
   ];
 
   function generateRandomPseudo() {
-    const a = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-    const n = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-    const num = Math.floor(Math.random() * 9000) + 100;  // 100-9099
-    return `${a}${n}${num}`;
+    // Final format: Adj + Noun + 2-3 digits. We cap total at 16 chars.
+    let tries = 0;
+    while (tries++ < 24) {
+      const a = SHORT_ADJ[Math.floor(Math.random() * SHORT_ADJ.length)];
+      const n = SHORT_NOUN[Math.floor(Math.random() * SHORT_NOUN.length)];
+      const digits = Math.floor(Math.random() * 90) + 10; // 10-99
+      const candidate = `${a}${n}${digits}`;
+      if (candidate.length <= 16) return candidate;
+    }
+    // Fallback: very short
+    return 'Joueur' + (Math.floor(Math.random() * 9000) + 1000);
   }
 
   /* ---------------------------------------------------------
-     Profanity / inappropriate name filter
-     Multi-language: FR, EN, ES, DE, IT + politically charged names.
-     Strategy: normalize the input (lowercase, strip accents, collapse
-     common leet substitutions, collapse repeated chars) and check
-     against a banlist via substring match.
+     v9 — Heavy profanity / inappropriate content filter
+     Languages covered: FR, EN, ES, IT, DE, PT, NL + slurs +
+     polemic person names. Strategy:
+       1. Normalize: lowercase, strip accents, replace leet
+          (0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s, !→i, |→i)
+       2. Strip zero-width characters
+       3. Strip all non-alphanumeric (so f.u.c.k, f_u_c_k, f u c k all
+          collapse to fuck)
+       4. Collapse 2+ repeating letters to a single letter
+          (fuuuuck → fuck)
+       5. Test against banlist via substring match
      --------------------------------------------------------- */
   const BANLIST = [
-    // French insults & profanity
-    'putain','merde','salope','connard','enculé','encule','batard','bâtard',
-    'pute','fdp','ntm','niqu','niquer','nique','tapette','pédé','pede',
-    'pédale','pedale','gouine','enfoiré','enfoire','chiotte','chier',
-    'couillon','suceur','suceuse',
-    // English profanity
-    'fuck','shit','bitch','asshole','bastard','cunt','dick','pussy','cock',
-    'whore','slut','wank','jerkoff','motherfucker',
-    // Slurs (any language; non-exhaustive but covers common attempts)
-    'nigger','nigga','faggot','tranny','retard','kike','spic','chink',
-    'gook','nègre','negre',
-    // Spanish / Italian / German
-    'puta','mierda','pendejo','cabron','cabrón','coño','cono','joder',
-    'cazzo','stronzo','figa','vaffanculo','merda','troia','puttana',
-    'scheisse','scheiße','arschloch','fotze','hure','schwanz',
-    // Sexual content
-    'porn','porno','xxx','sex','sexe','hentai','nude','naked','boobs',
-    'tits','nichons','nichon','penis','pénis','vagin','vagina','anal',
-    'erotic','érotique','erotique','onanism','masturb',
-    // Politically charged / abusive references
-    'hitler','adolf','nazi','swastika','holocaust','ss-totenkopf',
-    'stalin','staline','poutine-tueur','epstein','jeffreyepstein',
-    'breivik','manson','dahmer','bin laden','binladen','isis',
-    'al-qaeda','alqaeda','daesh','daech','kkk','klan',
-    // Common attempts to bypass with numbers
-    'h1tler','n1gger','fuk','fck','b1tch','sh1t'
+    // --- French ---
+    'putain','put1','merde','salope','salaud','connard','connasse',
+    'encule','enculer','enculee','enculeur','batard','pute','fdp',
+    'ntm','niqu','niquer','nique','tapette','pede','pedale','gouine',
+    'enfoire','enfoires','chiotte','chier','couillon','couille',
+    'suceur','suceuse','suce','salopard','salopette','salopiaud',
+    'chiant','chiotte','clochard','clodo','crevard','degage','tg',
+    'tagueule','grognasse','gros porc','vasy','tafiole','tarba',
+    'morue','bordel','bouffon','tocard','tareux','tarba','tarba',
+    'puceau','pucelle','batarde','batards','enculade','fiotte',
+    'pisseuse','pisser','peteux','pute','putes','puterie','salopiot',
+    'salopetri','dechet','retarde','retardee','retardes','attarde',
+    'attardee','attardes','mongol','mongole','mongols','mongoles',
+    'handicap','handicape','handicapee','autiste','autistes',
+    // --- English ---
+    'fuck','fuk','fck','fucker','fucking','fucked','fuckin','fuckup',
+    'motherfuck','motherfucker','mf','shit','shite','bullshit','sh1t',
+    'bitch','b1tch','biatch','bish','beotch','asshole','ass','dumbass',
+    'jackass','bastard','cunt','knt','kunt','dick','d1ck','prick',
+    'pussy','puss','cock','c0ck','whore','hoe','slut','slvt','wank',
+    'wanker','jerkoff','dipshit','dumbf','douchebag','douche','crap',
+    'piss','retard','retarded','spaz','suck','sucker','damn','goddamn',
+    'hell','bollocks','bugger','arse','arsehole','twat','twit','wuss',
+    'wussy','dipstick','jerk','jerkface','idiot','idiots','moron',
+    'morons','imbecile','imbeciles','stupid','dummy',
+    // --- Slurs (multi-lang, kept minimal but bypass-resistant) ---
+    'nigger','nigga','n1gger','n1gga','niglet','negro','negroid',
+    'negre','negres','negresse','faggot','fag','f4g','f4ggot','fagg',
+    'tranny','trannie','tranni','dyke','d1ke','kike','kyke','spic',
+    'sp1c','spik','chink','ch1nk','chinks','gook','gooks','wetback',
+    'beaner','beaners','jap','japs','raghead','sandnig','sandnigger',
+    'paki','pakis','redskin','redskins','squaw','squaws','kaffir',
+    'kaffer','schwuchtel',
+    // --- Spanish ---
+    'puta','putas','puto','putos','mierda','pendejo','pendeja',
+    'cabron','cabrona','cabrones','coño','cono','conyo','joder',
+    'jodete','culero','culera','culiao','culiao','culiada','marica',
+    'maricon','maricona','mariconazo','gilipollas','gilipolla','polla',
+    'pollas','verga','vergas','chinga','chingar','chingada','chingado',
+    'chinga tu madre','chupame','chupala','chupapollas','zorra','zorras',
+    'jodida','jodido','imbecil','idiota','idiotas','estupido','estupida',
+    'cojones','cabronazo','tarado','tarada',
+    // --- Italian ---
+    'cazzo','c4zzo','cazzi','cazzata','cazzate','stronzo','stronza',
+    'stronzi','stronzata','figa','figata','vaffanculo','vaffan','fanculo',
+    'fanculato','merda','merdoso','troia','troie','puttana','puttane',
+    'mignotta','mignotte','testa di cazzo','rompiscatole','rompiscatoli',
+    'scemo','scema','scemi','coglione','coglioni','coglionata',
+    'porcoddio','porco dio','porca madonna','porca puttana',
+    // --- German ---
+    'scheisse','scheiße','scheis','scheise','scheiß','scheissdreck',
+    'scheißkerl','arschloch','ahsloch','arsch','arschgesicht','fotze',
+    'fotzn','hure','huren','schlampe','schwanz','schwanze','wichser',
+    'wichs','wichsen','wixxer','schwuchtel','schwul','spast','spasti',
+    'spasten','idiot','idioten','dummkopf','dumkopf','blödmann','bloed',
+    'blöd','depp','deppen','arschficker','mistkerl','miststück',
+    // --- Portuguese ---
+    'porra','caralho','caralhos','caralh','cu','cuzão','cuzao','viado',
+    'veado','bicha','bichas','foda','foder','fodase','fodasse','fdp',
+    'puta','putaria','putinha','putona','vagabunda','vagabundo','merda',
+    'merdas','filho da puta','filhodaputa','arrombado','arrombada',
+    'corno','cornudo','desgracado','desgracada','idiota','imbecil',
+    'retardado','retardada','otario','otaria','babaca',
+    // --- Dutch ---
+    'kut','kanker','klootzak','klotezooi','hoer','hoeren','neuk','neuken',
+    'lul','lullen','tering','tyfus','pleur','godverdomme','godver',
+    'verdomme','flikker','flikkers','homo','homos','homofiel',
+    // --- Sexual / explicit ---
+    'porn','porno','pornhub','xxx','sex','sexe','sexo','hentai','nude',
+    'nudes','naked','boobs','boob','tits','titty','nichons','nichon',
+    'penis','penises','penisse','vagin','vagina','vaginas','anal','anale',
+    'analsex','erotic','erotique','erotisch','onanism','masturb',
+    'masturbation','masturber','onanieren','jerk','jerk off','blowjob',
+    'cumshot','cumshots','jizz','jizm','gangbang','threesome','foursome',
+    'doggystyle','dildo','dildos','vibrator','vibrators',
+    // --- Politically charged / extremist references / criminals ---
+    'hitler','adolf','adolfhitler','hitlerjugend','heilhitler','heil',
+    'nazi','nazis','nazism','nationalsocialist','swastika','swastik',
+    'sieg heil','sieghei','siegheil','heilnazi','wehrmacht','gestapo',
+    'thirdreich','3reich','reich','holocaust','shoah','genocide',
+    'genocid','aushwitz','auschwitz','daschau','dachau','treblinka',
+    'sobibor','mauthausen','buchenwald','bergenbelsen','bergen-belsen',
+    'totenkopf','ss-totenkopf','schutzstaffel','panzergrenadier',
+    'stalin','staline','stalinist','goebbels','goring','goering',
+    'himmler','heydrich','eichmann','mengele','mussolini','franco',
+    'pinochet','pol pot','polpot','khmerrouge','khmer-rouge',
+    'maozedong','mao zedong','epstein','jeffrey epstein','jeffreyepstein',
+    'maxwell','ghislaine','ghislaine maxwell','weinstein','harvey weinstein',
+    'cosby','bill cosby','jimmy savile','jimmysavile','savile','rolf harris',
+    'breivik','andersbreivik','manson','charles manson','dahmer','jeffrey dahmer',
+    'bundy','tedbundy','ted bundy','gacy','john wayne gacy','zodiac killer',
+    'ramirez','richard ramirez','soninhanssen','sonsofguns','binladen',
+    'bin laden','osama','osamabin','isis','islamicstate','daesh','daech',
+    'al qaeda','alqaeda','alqaida','al-qaeda','taliban','talib','boko haram',
+    'bokoharam','hezbollah','hamas','farc','eta','ira','provisionalira',
+    'kkk','klan','kuklux','kuklusklan','aryan','aryannation','aryanbrotherhood',
+    'whitepower','whitepride','blacksun','sonnenkreuz','wolfsangel',
+    'columbine','klebold','dylanklebold','ericharris','sandy hook','sandyhook',
+    'parkland','virginiatech','timothymcveigh','mcveigh','okcbombing',
+    'unabomber','kaczynski','tedkaczynski','elliottroger','elliott rodger',
+    'rodger','dylannroof','dylann roof','tarrant','brentontarrant',
+    'putin','putine','poutine','vladimirputin','assad','bashar','kim jong',
+    'kimjongun','kim jongun','khomeini','khamenei','saddam','saddamhussein',
+    'gaddafi','khadafi','kadhafi','milosevic','karadzic','mladic',
+    // --- Common bypass attempts (numbers + symbols) ---
+    'h1tler','hitl3r','h1tl3r','n4zi','n4z1','n1gger','n1gga','fukk',
+    'fuk','phuck','phuk','fukyou','fck','fcku','sh1t','b1tch','b!tch',
+    'biatchhh','sl@t','sl4t','f@g','c0ck','c0nt','cumsh0t','dik','d1k',
+    'wh0re','assh0le','d!ck','pen!s','pussssy','puzzy',
+    // --- Generic offensive / toxic phrases ---
+    'killyourself','killurself','kys','kms','dieinafire','goofyourself',
+    'goohyourself','suckmydick','smd','suckit','eatshit','eatadick',
+    'goblowyourself','iwillkill','iwillrape','rapeyou','rapist','rapists',
+    'pedo','pedophile','pedos','child porn','childporn','cp','loli',
+    'shotacon','shota','cunny','goonertube','incelblackpill','sigma sigma',
+    'sieg heil','heil hitler','white power','black power','genocide',
+    'lynch','lynching','kkk forever','heil heil','sieg heil heil'
   ];
+
+  // Pre-compute normalized banlist once
+  let _normalizedBan = null;
+  function _normBanlist() {
+    if (_normalizedBan) return _normalizedBan;
+    _normalizedBan = BANLIST.map(_normalize).filter(s => s.length >= 2);
+    return _normalizedBan;
+  }
 
   function _normalize(text) {
     if (!text) return '';
-    let s = String(text).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    let s = String(text);
+    // Strip zero-width / invisible characters
+    s = s.replace(/[\u200B-\u200F\u2028-\u202F\u2060-\u206F\uFEFF]/g, '');
+    // Lowercase + remove diacritics (combining marks)
+    s = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036F]/g, '');
     // Leet substitutions
-    s = s.replace(/0/g, 'o').replace(/3/g, 'e').replace(/4/g, 'a')
-         .replace(/1/g, 'i').replace(/5/g, 's').replace(/7/g, 't')
-         .replace(/\$/g, 's').replace(/@/g, 'a');
-    // Collapse 3+ repeating chars (fuuuck → fuck)
-    s = s.replace(/(.)\1{2,}/g, '$1$1');
-    // Remove non-alphanumeric
+    s = s
+      .replace(/[@4]/g, 'a')
+      .replace(/[1!|]/g, 'i')
+      .replace(/0/g, 'o')
+      .replace(/3/g, 'e')
+      .replace(/[$5]/g, 's')
+      .replace(/7/g, 't')
+      .replace(/8/g, 'b')
+      .replace(/9/g, 'g')
+      .replace(/[+]/g, 't')
+      .replace(/[€]/g, 'e');
+    // Remove non-alphanumeric (collapses f.u.c.k, f_u_c_k, f u c k, f*ck)
     s = s.replace(/[^a-z0-9]/g, '');
+    // Collapse 2+ repeating letters (fuuuck → fuk, fuck → fuk would lose meaning,
+    // so collapse only 3+ repeats — keep doubled letters intact)
+    s = s.replace(/(.)\1{2,}/g, '$1$1');
+    // Also try the harder "collapse all dupes" variant for matching
+    return s;
+  }
+
+  function _hardNormalize(text) {
+    // Even more aggressive: collapse ALL duplicate letters (fuuck → fuk, see → se)
+    let s = _normalize(text);
+    s = s.replace(/(.)\1+/g, '$1');
     return s;
   }
 
   function isInappropriate(text) {
-    const n = _normalize(text);
-    if (!n) return false;
-    for (const bad of BANLIST) {
-      if (n.includes(_normalize(bad))) return true;
+    if (!text) return false;
+    const n1 = _normalize(text);
+    const n2 = _hardNormalize(text);
+    if (!n1) return false;
+    for (const bad of _normBanlist()) {
+      if (n1.includes(bad)) return true;
+      if (n2.includes(bad)) return true;
     }
     return false;
   }
 
   function points(card) {
-    // Kept for backward-compat; unused in ranking-based scoring.
     if (card.type === 'number') return card.value;
     if (card.type === 'wild' || card.type === 'wild4') return 50;
     return 20;
   }
+
+  /* ---------------------------------------------------------
+     Preset chat phrases (simple chat mode)
+     --------------------------------------------------------- */
+  const CHAT_PRESETS = {
+    salutations: [
+      { id: 'hi',      text: 'Salut !' },
+      { id: 'hello',   text: 'Bonjour 👋' },
+      { id: 'bye',     text: 'Au revoir' },
+      { id: 'leaving', text: 'Je dois quitter' },
+      { id: 'back',    text: 'Je reviens' }
+    ],
+    reactions: [
+      { id: 'gg',      text: 'GG !' },
+      { id: 'bravo',   text: 'Bravo !' },
+      { id: 'lucky',   text: 'Coup de chance' },
+      { id: 'ohno',    text: 'Oh non...' },
+      { id: 'nice',    text: 'Bien joué !' },
+      { id: 'easy',    text: 'Trop facile 😎' }
+    ],
+    encouragements: [
+      { id: 'goodtry', text: 'Pas grave' },
+      { id: 'tough',   text: 'Dommage' },
+      { id: 'youcan',  text: 'Tu peux le faire !' },
+      { id: 'comeon',  text: 'Allez allez !' }
+    ],
+    game: [
+      { id: 'yourturn', text: 'À toi !' },
+      { id: 'starting', text: 'Je lance ?' },
+      { id: 'wait',     text: 'Attendez' },
+      { id: 'ready',    text: 'Je suis prêt' },
+      { id: 'careful',  text: 'Attention !' },
+      { id: 'uno',      text: 'UNO incoming 😏' }
+    ]
+  };
 
   window.UnoCards = {
     COLORS,
@@ -1135,12 +1723,16 @@ html, body {
     points,
     generateRoomCode,
     generateRandomPseudo,
-    isInappropriate
+    isInappropriate,
+    _normalize,        // exposed for chat filter
+    _hardNormalize,
+    CHAT_PRESETS
   };
 })();
 
-
-/* ===== js/rules.js ===== */
+  </script>
+  <!-- ===== inlined: js/rules.js ===== -->
+  <script>
 /* =========================================================
    UnoPlay — Rules engine (ranking-based scoring)
    Exposes window.UnoRules
@@ -1516,8 +2108,9 @@ html, body {
   };
 })();
 
-
-/* ===== js/network.js ===== */
+  </script>
+  <!-- ===== inlined: js/network.js ===== -->
+  <script>
 /* =========================================================
    UnoPlay — Networking (PeerJS WebRTC P2P)
    Exposes window.UnoNet
@@ -1845,8 +2438,542 @@ html, body {
   window.UnoNet = { Host, Client, Directory, DIRECTORY_PEER_ID, ROOM_PEER_PREFIX };
 })();
 
+  </script>
+  <!-- ===== inlined: js/bots.js ===== -->
+  <script>
+/* =========================================================
+   UnoPlay — Bot AI (v10)
+   Exposes window.UnoBots
+   ---------------------------------------------------------
+   The bot is a turn handler. Given a game state and a bot
+   player id, it returns the action it would like to take:
+     { type: 'play', cardId, chosenColor? }
+     { type: 'draw' }
+     { type: 'pass' }
+     { type: 'uno' }
+     { type: 'challenge', challenge: boolean }
+   Difficulty:
+     easy   — random legal move, sometimes draws even if it could play
+     normal — prefer action cards, calls UNO ~70% of the time
+     hard   — counts colors, plays wild4 strategically, always calls UNO
+   ========================================================= */
 
-/* ===== js/ui.js ===== */
+(function () {
+  'use strict';
+
+  const Rules = window.UnoRules;
+  const Cards = window.UnoCards;
+
+  const BOT_NAMES = [
+    '🤖 Robo','🤖 Botzilla','🤖 ByteBot','🤖 Pixel','🤖 Circuit',
+    '🤖 Spark','🤖 Glitch','🤖 Nano','🤖 Echo','🤖 Vector'
+  ];
+  function generateBotName(existing) {
+    const taken = new Set((existing || []).map(s => s.toLowerCase()));
+    for (let i = 0; i < 30; i++) {
+      const n = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+      if (!taken.has(n.toLowerCase())) return n;
+    }
+    return '🤖 Bot' + Math.floor(Math.random() * 1000);
+  }
+
+  function legalCards(state, player) {
+    const top = state.discardPile[state.discardPile.length - 1];
+    return player.hand.filter(c => Rules.canPlay(c, top, state.currentColor, state.pendingDraw));
+  }
+
+  function dominantColor(hand) {
+    const counts = { red: 0, blue: 0, green: 0, yellow: 0 };
+    for (const c of hand) if (c.color) counts[c.color]++;
+    let best = 'red', bestN = -1;
+    for (const k of Object.keys(counts)) if (counts[k] > bestN) { bestN = counts[k]; best = k; }
+    return best;
+  }
+
+  function chooseAction(state, botPlayerId, difficulty) {
+    const player = state.players.find(p => p.id === botPlayerId);
+    if (!player) return null;
+
+    // Initial color choice if first card was wild
+    if (state.status === 'choosing-color') {
+      return { type: 'choose-color', color: dominantColor(player.hand) };
+    }
+
+    // Forced draw from pending +2/+4: just draw
+    if (state.pendingDraw > 0) return { type: 'draw' };
+
+    // After drawing, the bot decides whether to play the drawn card or pass
+    if (state.waitingForDrawDecision) {
+      // We have the option to play the just-drawn legal card (or pass)
+      const legals = legalCards(state, player);
+      if (legals.length > 0) {
+        return chooseFromLegals(state, player, legals, difficulty);
+      }
+      return { type: 'pass' };
+    }
+
+    const legals = legalCards(state, player);
+    if (legals.length === 0) return { type: 'draw' };
+
+    if (difficulty === 'easy') {
+      // Sometimes don't play even if we can (10% chance for easy)
+      if (Math.random() < 0.10) return { type: 'draw' };
+    }
+
+    return chooseFromLegals(state, player, legals, difficulty);
+  }
+
+  function chooseFromLegals(state, player, legals, difficulty) {
+    let chosen;
+    if (difficulty === 'easy') {
+      chosen = legals[Math.floor(Math.random() * legals.length)];
+    } else if (difficulty === 'normal') {
+      // Prefer action cards over numbers, wilds last
+      chosen = pickByPriority(legals, ['draw2','skip','reverse','number','wild','wild4']);
+    } else { // hard
+      // Strategic: save wild4 unless we have few cards or opponent is close to UNO
+      const opps = state.players.filter(p => p.id !== player.id && Rules.isActive(p));
+      const dangerous = opps.some(p => p.hand.length <= 2);
+      const fewCards = player.hand.length <= 3;
+      let priority;
+      if (dangerous && fewCards) priority = ['wild4','draw2','skip','reverse','number','wild'];
+      else if (dangerous)        priority = ['draw2','skip','reverse','wild4','number','wild'];
+      else                       priority = ['number','draw2','skip','reverse','wild','wild4'];
+      chosen = pickByPriority(legals, priority);
+    }
+    // Sub-priority within numbers: keep highest-value cards
+    if (chosen.type === 'number') {
+      const sameType = legals.filter(c => c.type === 'number');
+      if (sameType.length > 1) sameType.sort((a, b) => b.value - a.value);
+      chosen = sameType[0] || chosen;
+    }
+
+    const action = { type: 'play', cardId: chosen.id };
+    if (chosen.type === 'wild' || chosen.type === 'wild4') {
+      // Pick the color we have the most of (excluding the played card)
+      const remaining = player.hand.filter(c => c.id !== chosen.id);
+      action.chosenColor = dominantColor(remaining);
+      // If we have no colored cards left, fall back to current color or red
+      if (!remaining.some(c => c.color)) action.chosenColor = state.currentColor || 'red';
+    }
+    return action;
+  }
+
+  function pickByPriority(cards, priority) {
+    for (const t of priority) {
+      const found = cards.find(c => c.type === t);
+      if (found) return found;
+    }
+    return cards[0];
+  }
+
+  /* =========================================================
+     Should the bot call UNO when it has exactly 1 card?
+     ========================================================= */
+  function shouldCallUno(difficulty) {
+    if (difficulty === 'easy')   return Math.random() < 0.30;
+    if (difficulty === 'normal') return Math.random() < 0.70;
+    return true; // hard
+  }
+
+  /* =========================================================
+     Challenge decision: when the bot is the target of a +4
+     ========================================================= */
+  function shouldChallenge(state, botPlayerId, difficulty) {
+    if (difficulty === 'easy') return Math.random() < 0.20;
+    if (difficulty === 'normal') return Math.random() < 0.40;
+    // Hard: challenge if we have at least one card matching the current color (the play looks suspicious)
+    const bot = state.players.find(p => p.id === botPlayerId);
+    if (!bot) return false;
+    const pc = state.pendingChallenge;
+    if (!pc) return false;
+    return Math.random() < 0.65;
+  }
+
+  /* =========================================================
+     Bot thinking delay per difficulty (so it feels human-ish)
+     ========================================================= */
+  function thinkDelay(difficulty) {
+    const r = Math.random();
+    if (difficulty === 'easy')   return 900 + r * 1400;
+    if (difficulty === 'normal') return 700 + r * 1200;
+    return 500 + r * 900;
+  }
+
+  window.UnoBots = {
+    chooseAction,
+    shouldCallUno,
+    shouldChallenge,
+    thinkDelay,
+    generateBotName,
+    BOT_NAMES
+  };
+})();
+
+  </script>
+  <!-- ===== inlined: js/chat.js ===== -->
+  <script>
+/* =========================================================
+   UnoPlay — Chat module (v10)
+   Exposes window.UnoChat
+   ---------------------------------------------------------
+   Two modes:
+     * 'off'    : disabled — toggle hidden
+     * 'simple' : preset messages only (CHAT_PRESETS from cards.js)
+     * 'normal' : free text up to 100 chars + anti-spam + filter
+   The chat lives in the right-side panel that's pre-built in index.html.
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  const Cards = window.UnoCards;
+  const PRESETS = Cards.CHAT_PRESETS;
+
+  /* =========================================================
+     Anti-spam: 3 messages in <3s between each → 10s cooldown
+     ========================================================= */
+  const SPAM_WINDOW_MS = 3000;
+  const SPAM_THRESHOLD = 3;
+  const COOLDOWN_MS    = 10000;
+
+  /* =========================================================
+     Module state
+     ========================================================= */
+  const Chat = {
+    mode: 'normal',         // 'off' | 'simple' | 'normal'
+    enabled: false,
+    onSend: null,           // (text, isPreset) => void — set by app
+    panelEl: null,
+    listEl: null,
+    inputEl: null,
+    sendBtn: null,
+    presetsEl: null,
+    toggleBtn: null,
+    closeBtn: null,
+    isOpen: false,
+    unreadCount: 0,
+    recentSends: [],        // timestamps of recent self-sends
+    cooldownUntil: 0,
+    cooldownInterval: null,
+    myName: ''
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  /* =========================================================
+     Word filter (uses Cards._normalize + extra patterns)
+     ========================================================= */
+  function filterMessage(raw) {
+    if (!raw) return { ok: false, reason: 'Message vide.' };
+    raw = String(raw);
+    if (raw.length > 100) return { ok: false, reason: 'Message trop long (100 max).' };
+    if (raw.trim().length === 0) return { ok: false, reason: 'Message vide.' };
+    // Block messages that contain banlisted words after aggressive normalization
+    if (Cards.isInappropriate(raw)) {
+      return { ok: false, reason: 'Message bloqué par le filtre.' };
+    }
+    // Also normalize and check substring against an extra regex pack
+    const norm = Cards._normalize(raw);
+    const hard = Cards._hardNormalize(raw);
+    const EXTRA_PATTERNS = [
+      /n[i1!|]+gg?[ae34r]+r?/i,   // catches n1gger, nigggga, ni4gger after non-norm
+      /h[i1!|]+t+l[3e]+r/i,       // hitler variants
+      /n[a@4]+z[i1!|]+/i,         // nazi variants
+      /k[1i!|]+ll?\s*y[ouy0]+r?\s*s[3e]+lf/i // killyourself
+    ];
+    for (const re of EXTRA_PATTERNS) {
+      if (re.test(raw) || re.test(norm) || re.test(hard)) {
+        return { ok: false, reason: 'Message bloqué par le filtre.' };
+      }
+    }
+    return { ok: true };
+  }
+
+  /* =========================================================
+     Spam tracker
+     ========================================================= */
+  function checkSpam() {
+    const now = Date.now();
+    if (now < Chat.cooldownUntil) {
+      return { ok: false, until: Chat.cooldownUntil };
+    }
+    // Keep only sends within the spam window
+    Chat.recentSends = Chat.recentSends.filter(t => now - t < SPAM_WINDOW_MS);
+    return { ok: true };
+  }
+  function recordSend() {
+    const now = Date.now();
+    Chat.recentSends.push(now);
+    Chat.recentSends = Chat.recentSends.filter(t => now - t < SPAM_WINDOW_MS);
+    if (Chat.recentSends.length >= SPAM_THRESHOLD) {
+      Chat.cooldownUntil = now + COOLDOWN_MS;
+      Chat.recentSends = [];
+      startCooldownTicker();
+    }
+  }
+  function startCooldownTicker() {
+    if (Chat.cooldownInterval) return;
+    updateCooldownUI();
+    Chat.cooldownInterval = setInterval(() => {
+      updateCooldownUI();
+      if (Date.now() >= Chat.cooldownUntil) {
+        clearInterval(Chat.cooldownInterval);
+        Chat.cooldownInterval = null;
+        updateCooldownUI();
+      }
+    }, 250);
+  }
+  function updateCooldownUI() {
+    const el = $('chat-cooldown-text');
+    if (!el) return;
+    const remaining = Math.max(0, Chat.cooldownUntil - Date.now());
+    if (remaining > 0) {
+      el.textContent = `⏳ Attends ${Math.ceil(remaining / 1000)}s (anti-spam)`;
+      el.classList.add('chat-cooldown');
+      if (Chat.sendBtn) Chat.sendBtn.disabled = true;
+    } else {
+      el.textContent = '';
+      el.classList.remove('chat-cooldown');
+      if (Chat.sendBtn) Chat.sendBtn.disabled = false;
+    }
+  }
+
+  /* =========================================================
+     Render messages
+     ========================================================= */
+  function appendMessage(msg) {
+    if (!Chat.listEl) return;
+    const div = document.createElement('div');
+    if (msg.kind === 'log') {
+      div.className = 'chat-msg log';
+      div.textContent = msg.text;
+    } else {
+      div.className = 'chat-msg' + (msg.fromSelf ? ' self' : '');
+      const author = document.createElement('span');
+      author.className = 'chat-author';
+      author.textContent = msg.author || '?';
+      const text = document.createElement('span');
+      text.className = 'chat-text';
+      text.textContent = msg.text;
+      const time = document.createElement('span');
+      time.className = 'chat-time';
+      const d = new Date(msg.timestamp || Date.now());
+      time.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      div.appendChild(author);
+      div.appendChild(text);
+      div.appendChild(time);
+    }
+    Chat.listEl.appendChild(div);
+    // Auto-scroll
+    Chat.listEl.scrollTop = Chat.listEl.scrollHeight;
+  }
+
+  function incrementUnread() {
+    Chat.unreadCount++;
+    if (Chat.toggleBtn) {
+      Chat.toggleBtn.classList.add('has-unread');
+      Chat.toggleBtn.setAttribute('data-unread', String(Chat.unreadCount));
+    }
+  }
+  function clearUnread() {
+    Chat.unreadCount = 0;
+    if (Chat.toggleBtn) {
+      Chat.toggleBtn.classList.remove('has-unread');
+      Chat.toggleBtn.setAttribute('data-unread', '0');
+    }
+  }
+
+  /* =========================================================
+     Render preset buttons (simple mode)
+     ========================================================= */
+  function renderPresets() {
+    if (!Chat.presetsEl) return;
+    Chat.presetsEl.innerHTML = '';
+    if (Chat.mode !== 'simple' && Chat.mode !== 'normal') return;
+    // In normal mode, presets are shown as quick-buttons too
+    const labels = {
+      salutations: 'Salutations',
+      reactions: 'Réactions',
+      encouragements: 'Encouragements',
+      game: 'Jeu'
+    };
+    for (const group of Object.keys(PRESETS)) {
+      const wrap = document.createElement('div');
+      wrap.className = 'chat-preset-group';
+      const label = document.createElement('div');
+      label.className = 'preset-label';
+      label.textContent = labels[group] || group;
+      wrap.appendChild(label);
+      const btnRow = document.createElement('div');
+      btnRow.className = 'preset-buttons';
+      for (const preset of PRESETS[group]) {
+        const b = document.createElement('button');
+        b.className = 'chat-preset-btn';
+        b.textContent = preset.text;
+        b.addEventListener('click', () => sendPreset(preset.text));
+        btnRow.appendChild(b);
+      }
+      wrap.appendChild(btnRow);
+      Chat.presetsEl.appendChild(wrap);
+    }
+  }
+
+  /* =========================================================
+     Public send entry points
+     ========================================================= */
+  function sendText() {
+    if (Chat.mode === 'off') return;
+    if (Chat.mode === 'simple') return; // simple has no free input
+    if (!Chat.inputEl) return;
+    const raw = Chat.inputEl.value.trim();
+    if (!raw) return;
+    const spam = checkSpam();
+    if (!spam.ok) {
+      window.UnoUI && UnoUI.toast(`Anti-spam : attends ${Math.ceil((spam.until - Date.now())/1000)}s.`, { error: true });
+      window.UnoUI && UnoUI.Audio.error();
+      return;
+    }
+    const filt = filterMessage(raw);
+    if (!filt.ok) {
+      window.UnoUI && UnoUI.toast(filt.reason, { error: true });
+      window.UnoUI && UnoUI.Audio.error();
+      return;
+    }
+    Chat.inputEl.value = '';
+    updateCharCount();
+    recordSend();
+    if (Chat.onSend) Chat.onSend(raw, false);
+  }
+  function sendPreset(text) {
+    if (Chat.mode === 'off') return;
+    // Presets bypass the free-text spam window (they're capped by being short list).
+    if (Chat.onSend) Chat.onSend(text, true);
+  }
+
+  /* =========================================================
+     Toggle visibility
+     ========================================================= */
+  function open() {
+    if (!Chat.panelEl) return;
+    Chat.panelEl.classList.add('open');
+    Chat.isOpen = true;
+    clearUnread();
+    setTimeout(() => Chat.inputEl && Chat.inputEl.focus(), 100);
+  }
+  function close() {
+    if (!Chat.panelEl) return;
+    Chat.panelEl.classList.remove('open');
+    Chat.isOpen = false;
+  }
+  function toggle() {
+    if (Chat.isOpen) close(); else open();
+  }
+
+  /* =========================================================
+     Mode / setup
+     ========================================================= */
+  function setMode(mode) {
+    Chat.mode = (mode === 'off' || mode === 'simple' || mode === 'normal') ? mode : 'normal';
+    if (Chat.mode === 'off') {
+      hideToggle();
+      close();
+      return;
+    }
+    showToggle();
+    renderPresets();
+    // In simple mode hide free input
+    const inputArea = $('chat-input-area');
+    if (inputArea) inputArea.style.display = (Chat.mode === 'simple') ? 'none' : 'block';
+  }
+  function hideToggle() {
+    if (Chat.toggleBtn) Chat.toggleBtn.style.display = 'none';
+  }
+  function showToggle() {
+    if (Chat.toggleBtn) Chat.toggleBtn.style.display = 'flex';
+  }
+
+  function updateCharCount() {
+    if (!Chat.inputEl) return;
+    const c = $('chat-char-count');
+    if (c) c.textContent = `${Chat.inputEl.value.length}/100`;
+  }
+
+  /* =========================================================
+     Init: bind DOM
+     ========================================================= */
+  function init(opts) {
+    opts = opts || {};
+    Chat.panelEl = $('chat-panel');
+    Chat.listEl = $('chat-messages');
+    Chat.inputEl = $('chat-input');
+    Chat.sendBtn = $('chat-send');
+    Chat.presetsEl = $('chat-presets');
+    Chat.toggleBtn = $('chat-toggle-btn');
+    Chat.closeBtn = $('chat-close-btn');
+
+    if (Chat.toggleBtn) Chat.toggleBtn.addEventListener('click', toggle);
+    if (Chat.closeBtn) Chat.closeBtn.addEventListener('click', close);
+    if (Chat.sendBtn) Chat.sendBtn.addEventListener('click', sendText);
+    if (Chat.inputEl) {
+      Chat.inputEl.addEventListener('input', updateCharCount);
+      Chat.inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendText();
+        }
+      });
+    }
+    updateCharCount();
+    hideToggle();   // hidden by default; shown when entering game
+  }
+
+  /* =========================================================
+     Lifecycle helpers for app.js
+     ========================================================= */
+  function reset() {
+    if (Chat.listEl) Chat.listEl.innerHTML = '';
+    Chat.unreadCount = 0;
+    clearUnread();
+    Chat.recentSends = [];
+    Chat.cooldownUntil = 0;
+    if (Chat.cooldownInterval) { clearInterval(Chat.cooldownInterval); Chat.cooldownInterval = null; }
+    updateCooldownUI();
+    close();
+  }
+
+  function receiveMessage(msg) {
+    // msg: { author, text, fromSelf?, kind?, timestamp? }
+    if (Chat.mode === 'off') return;
+    appendMessage(msg);
+    if (msg.kind === 'log') return;
+    if (msg.fromSelf) {
+      window.UnoUI && UnoUI.Audio.chatSend();
+    } else {
+      window.UnoUI && UnoUI.Audio.chatReceive();
+      if (!Chat.isOpen) incrementUnread();
+    }
+  }
+
+  function logEvent(text) {
+    appendMessage({ kind: 'log', text });
+  }
+
+  window.UnoChat = {
+    init, setMode, reset,
+    receiveMessage, logEvent,
+    open, close, toggle,
+    setOnSend(fn) { Chat.onSend = fn; },
+    setMyName(name) { Chat.myName = name; },
+    getMode() { return Chat.mode; },
+    showToggle, hideToggle,
+    filterMessage
+  };
+})();
+
+  </script>
+  <!-- ===== inlined: js/ui.js ===== -->
+  <script>
 /* =========================================================
    UnoPlay — UI rendering, animations, sounds (v6)
    Exposes window.UnoUI
@@ -1967,6 +3094,70 @@ html, body {
         </div>`;
       root.appendChild(wrap);
       wrap.querySelector('[data-act="ok"]').addEventListener('click', () => { Audio.click(); root.removeChild(wrap); resolve(); });
+    });
+  }
+
+  /* =========================================================
+     CRASH / CONNECTION ERROR modal (auto-closes in 8s, with txt download)
+     ========================================================= */
+  function showCrashModal(opts) {
+    opts = opts || {};
+    Audio.crash();
+    const root = ensureModalRoot();
+    const wrap = document.createElement('div');
+    wrap.className = 'modal app-modal crash-modal';
+    const code = opts.code || ('ERR_' + Date.now().toString(36).toUpperCase());
+    const reason = opts.reason || 'Erreur inconnue';
+    const detail = opts.detail || '';
+    const timestamp = new Date().toISOString();
+    const ua = (navigator && navigator.userAgent) || 'unknown';
+    const fullReport = [
+      '=== UnoPlay - Rapport d\'erreur ===',
+      'Date     : ' + timestamp,
+      'Code     : ' + code,
+      'Raison   : ' + reason,
+      'Détails  : ' + detail,
+      'URL      : ' + (location && location.href || ''),
+      'UA       : ' + ua,
+      ''
+    ].join('\n');
+    wrap.innerHTML = `
+      <div class="modal-content">
+        <h3>⚠ Partie interrompue</h3>
+        <p>${reason.replace(/[<>]/g, '')}</p>
+        <div class="crash-code">${code}</div>
+        <p style="font-size:12px;">Tu peux télécharger un rapport plus détaillé pour le partager.</p>
+        <div class="modal-buttons">
+          <button class="btn btn-secondary" data-act="download">⬇ Télécharger le rapport</button>
+          <button class="btn btn-primary" data-act="close">Fermer</button>
+        </div>
+        <p class="crash-countdown">Fermeture auto dans <span data-cd>8</span>s</p>
+      </div>`;
+    root.appendChild(wrap);
+    let secs = 8;
+    const cdEl = wrap.querySelector('[data-cd]');
+    const close = () => {
+      if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+      if (interval) clearInterval(interval);
+    };
+    const interval = setInterval(() => {
+      secs--;
+      if (cdEl) cdEl.textContent = secs;
+      if (secs <= 0) close();
+    }, 1000);
+    wrap.querySelector('[data-act="close"]').addEventListener('click', () => { Audio.back(); close(); });
+    wrap.querySelector('[data-act="download"]').addEventListener('click', () => {
+      try {
+        const blob = new Blob([fullReport], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'unoplay-error-' + code + '.txt';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch {} }, 200);
+        Audio.click();
+      } catch (e) { console.warn('download failed', e); }
     });
   }
 
@@ -2212,8 +3403,18 @@ html, body {
     const dirEl = document.getElementById('game-direction');
     dirEl.textContent = view.direction === 1 ? '⤵ Sens horaire' : '⤴ Sens anti-horaire';
 
-    const colorEl = document.getElementById('game-current-color');
-    colorEl.className = 'current-color ' + (view.currentColor || '');
+    // Improved color pill: colored chip + label
+    const pillEl = document.getElementById('game-current-color-pill');
+    if (pillEl) {
+      const col = view.currentColor || '';
+      const labels = { red: 'Rouge', blue: 'Bleu', green: 'Vert', yellow: 'Jaune' };
+      pillEl.className = 'current-color-pill ' + col;
+      const labelSpan = pillEl.querySelector('.label');
+      if (labelSpan) labelSpan.textContent = labels[col] || '—';
+    }
+    // Backward compat: also update the (now hidden) old span if present
+    const oldColorEl = document.getElementById('game-current-color');
+    if (oldColorEl) oldColorEl.className = 'current-color ' + (view.currentColor || '');
 
     const oppRoot = document.getElementById('opponents');
     oppRoot.innerHTML = '';
@@ -2224,6 +3425,15 @@ html, body {
       if (p.id === view.currentPlayerId) opp.classList.add('active');
       if (p.calledUno || p.handCount === 1) opp.classList.add('uno');
       if (p.finishedRank) opp.classList.add('finished');
+
+      // Bot badge if name contains the robot emoji or starts with 🤖
+      if (p.isBot || /🤖/.test(p.name)) {
+        const badge = document.createElement('div');
+        badge.className = 'opp-bot-badge';
+        badge.textContent = 'BOT';
+        opp.appendChild(badge);
+      }
+
       const nameEl = document.createElement('div');
       nameEl.className = 'opp-name';
       nameEl.textContent = p.name + (!p.connected ? ' (déco)' : '');
@@ -2231,30 +3441,64 @@ html, body {
       metaEl.className = 'opp-meta';
       if (p.finishedRank) metaEl.textContent = `🏁 #${p.finishedRank}`;
       else                metaEl.textContent = `${p.handCount} carte${p.handCount > 1 ? 's' : ''}`;
-      const cards = document.createElement('div');
-      cards.className = 'opp-cards';
+
+      // "Uno table" fan of face-down cards
+      const fan = document.createElement('div');
+      fan.className = 'opp-fan';
       if (!p.finishedRank) {
         const max = Math.min(p.handCount, 7);
         for (let i = 0; i < max; i++) {
           const c = document.createElement('div');
-          c.className = 'mini-card';
-          cards.appendChild(c);
+          c.className = 'fan-card';
+          // Spread cards in an arc
+          const spread = Math.min(max - 1, 6) * 10; // total degrees
+          const angle = (max > 1) ? -spread / 2 + (spread * (i / (max - 1 || 1))) : 0;
+          const offsetX = (max > 1) ? -((max - 1) * 6) / 2 + i * 6 : 0;
+          c.style.transform = `translateX(${offsetX}px) rotate(${angle}deg)`;
+          c.style.zIndex = String(i);
+          fan.appendChild(c);
         }
       }
+
       if (view.unoMissedBy === p.id) {
         opp.style.cursor = 'pointer';
         opp.title = "Cliquer pour signaler l'oubli du UNO";
         opp.addEventListener('click', () => opts.onCatchUno(p.id));
       }
-      opp.appendChild(nameEl); opp.appendChild(metaEl); opp.appendChild(cards);
+      opp.appendChild(nameEl); opp.appendChild(metaEl); opp.appendChild(fan);
       oppRoot.appendChild(opp);
     }
 
     const discard = document.getElementById('discard-pile');
-    discard.innerHTML = '';
-    if (view.topCard) {
-      const c = buildCardEl(view.topCard, { slideIn: true });
-      discard.appendChild(c);
+    // Only animate slide-in when the top card actually CHANGED.
+    // Otherwise every state update (including REJECTED actions like double-draw)
+    // re-animates the top card and looks like a brand-new card just landed.
+    const newTopId = view.topCard ? view.topCard.id : null;
+    if (newTopId !== _lastTopCardId) {
+      discard.innerHTML = '';
+      if (view.topCard) {
+        const c = buildCardEl(view.topCard, { slideIn: true });
+        if (view.topCard.color && (view.topCard.type === 'wild' || view.topCard.type === 'wild4') && view.currentColor) {
+          // Wild card with a chosen color: show small color dot inside the card (clipped, no overflow)
+          const dot = document.createElement('div');
+          dot.className = 'card-color-dot ' + view.currentColor;
+          c.appendChild(dot);
+        }
+        discard.appendChild(c);
+      }
+      _lastTopCardId = newTopId;
+    } else if (view.topCard && (view.topCard.type === 'wild' || view.topCard.type === 'wild4')) {
+      // Same wild card, but chosen color might have changed → just update the dot
+      const existing = discard.querySelector('.card');
+      if (existing) {
+        const old = existing.querySelector('.card-color-dot');
+        if (old) old.remove();
+        if (view.currentColor) {
+          const dot = document.createElement('div');
+          dot.className = 'card-color-dot ' + view.currentColor;
+          existing.appendChild(dot);
+        }
+      }
     }
     document.getElementById('draw-count').textContent = view.drawPileCount + ' cartes';
 
@@ -2469,8 +3713,9 @@ html, body {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1400);
   }
-  function resetTurnTracker() { _lastIsMyTurn = false; }
+  function resetTurnTracker() { _lastIsMyTurn = false; _lastTopCardId = null; }
   let _lastIsMyTurn = false;
+  let _lastTopCardId = null;
 
   /* =========================================================
      SOUND ENGINE
@@ -2487,19 +3732,25 @@ html, body {
     musicNodes: [],
 
     filenames: {
-      click:       'click.mp3',
-      back:        'back.mp3',
-      cardPlay:    'card_play.mp3',
-      cardDraw:    'card_draw.mp3',
-      skip:        'skip.mp3',
-      reverse:     'reverse.mp3',
-      uno:         'uno.mp3',
-      win:         'win.mp3',
-      lose:        'lose.mp3',
-      error:       'error.mp3',
-      roomCreated: 'room_created.mp3',
-      countdown:   'countdown.mp3',
-      yourTurn:    'your_turn.mp3'
+      click:        'click.mp3',
+      back:         'back.mp3',
+      cardPlay:     'card_play.mp3',
+      cardDraw:     'card_draw.mp3',
+      skip:         'skip.mp3',
+      reverse:      'reverse.mp3',
+      uno:          'uno.mp3',
+      win:          'win.mp3',
+      lose:         'lose.mp3',
+      error:        'error.mp3',
+      roomCreated:  'room_created.mp3',
+      countdown:    'countdown.mp3',
+      yourTurn:     'your_turn.mp3',
+      playerJoin:   'player_join.mp3',
+      playerLeave:  'player_leave.mp3',
+      playerReady:  'player_ready.mp3',
+      crash:        'crash.mp3',
+      chatSend:     'chat_send.mp3',
+      chatReceive:  'chat_receive.mp3'
       // music files (music.mp3, music2.mp3, ..., music10.mp3) loaded separately
     },
     files: {},  // name -> HTMLAudioElement, or false if failed
@@ -2534,10 +3785,13 @@ html, body {
       try {
         const a = new window.Audio('audios/' + filename);
         a.preload = 'auto';
+        // Native loop = the file is rewound instantly with NO gap when it ends.
+        a.loop = true;
         const markLoaded = () => {
           if (!this.musicFiles.includes(a)) {
             this.musicFiles.push(a);
-            a.addEventListener('ended', () => this._playNextMusic());
+            // No 'ended' listener: with loop=true the file restarts itself instantly.
+            // For multi-track shuffle we use a manual rotation timer (see startMusic).
             try { console.log('[UnoPlay] Music loaded: audios/' + filename); } catch {}
           }
         };
@@ -2561,7 +3815,8 @@ html, body {
       }
       this._currentMusic = this.musicFiles[idx];
       this._currentMusic.volume = Math.max(0, Math.min(1, this.musicVolume));
-      this._currentMusic.loop = false;
+      // loop=true: the track rebuffers AT the seek-to-zero so no gap when it ends.
+      this._currentMusic.loop = true;
       try {
         this._currentMusic.currentTime = 0;
         const p = this._currentMusic.play();
@@ -2621,6 +3876,12 @@ html, body {
     roomCreated() { this._play('roomCreated', () => { const t = this.ctx.currentTime; [523, 659, 880].forEach((f, i) => this._sTone(f, 0.14, 'triangle', 0.28, 0, t + i * 0.08)); }); },
     countdown()   { this._play('countdown',   () => { this._sTone(660, 0.08, 'square', 0.2); }); },
     yourTurn()    { this._play('yourTurn',    () => { const t = this.ctx.currentTime; this._sTone(659, 0.10, 'triangle', 0.3, 0, t); this._sTone(880, 0.16, 'triangle', 0.3, 0, t + 0.09); }); },
+    playerJoin()  { this._play('playerJoin',  () => { const t = this.ctx.currentTime; this._sTone(523, 0.10, 'triangle', 0.25, 0, t); this._sTone(784, 0.14, 'triangle', 0.25, 0, t + 0.08); }); },
+    playerLeave() { this._play('playerLeave', () => { const t = this.ctx.currentTime; this._sTone(523, 0.10, 'sine', 0.22, 0, t); this._sTone(330, 0.16, 'sine', 0.22, 0, t + 0.08); }); },
+    playerReady() { this._play('playerReady', () => { const t = this.ctx.currentTime; this._sTone(659, 0.08, 'square', 0.22, 0, t); this._sTone(988, 0.14, 'triangle', 0.22, 0, t + 0.06); }); },
+    crash()       { this._play('crash',       () => { const t = this.ctx.currentTime; this._sTone(220, 0.20, 'sawtooth', 0.30, 0, t); this._sTone(110, 0.30, 'sawtooth', 0.25, 0, t + 0.15); this._sTone(80, 0.40, 'square', 0.25, 0, t + 0.25); }); },
+    chatSend()    { this._play('chatSend',    () => { this._sTone(880, 0.05, 'triangle', 0.12); }); },
+    chatReceive() { this._play('chatReceive', () => { this._sTone(660, 0.05, 'sine', 0.12); }); },
 
     _sTone(freq, dur, type, vol, delay, when) {
       if (!this.ctx) return;
@@ -2751,7 +4012,6 @@ html, body {
       this.musicVolume = v;
       this.init();
       if (this.musicGain) this.musicGain.gain.value = v;
-      // Apply to all loaded music files
       for (const m of this.musicFiles) {
         try { m.volume = Math.max(0, Math.min(1, v)); } catch {}
       }
@@ -2764,6 +4024,7 @@ html, body {
   window.UnoUI = {
     showScreen, toast,
     showConfirm, showPrompt, showAlert,
+    showCrashModal,
     showCountdown, hideCountdown, cancelCountdown,
     buildCardEl, buildCardBack,
     renderLobby, renderGame,
@@ -2776,8 +4037,9 @@ html, body {
   };
 })();
 
-
-/* ===== js/app.js ===== */
+  </script>
+  <!-- ===== inlined: js/app.js ===== -->
+  <script>
 /* =========================================================
    UnoPlay — App orchestration (v6)
    ========================================================= */
@@ -2789,6 +4051,8 @@ html, body {
   const Rules = window.UnoRules;
   const UI    = window.UnoUI;
   const Net   = window.UnoNet;
+  const Chat  = window.UnoChat;
+  const Bots  = window.UnoBots;
 
   /* ---------------------------------------------------------
      Persistence
@@ -2827,7 +4091,12 @@ html, body {
     countdownInterval: null,
     countdownValue: 0,
     clientNet: null, clientLastView: null, clientLastLobby: null,
-    clientMyId: null, clientHostId: null, clientIsPublic: true
+    clientMyId: null, clientHostId: null, clientIsPublic: true,
+    chatMode: 'normal',     // 'off' | 'simple' | 'normal'
+    soloBots: [],           // [{ id, name, difficulty }]
+    soloTurnTimer: null,    // setTimeout handle
+    publicRefreshInterval: null,
+    currentScreen: 'home'
   };
 
   function $(id) { return document.getElementById(id); }
@@ -2839,6 +4108,39 @@ html, body {
   }
 
   function suggestPseudo() { return Cards.generateRandomPseudo(); }
+
+  /* Returns a random pseudo whose length fits the input's maxlength. */
+  function suggestPseudoForInput(input) {
+    const max = parseInt(input && input.maxLength, 10) || 16;
+    for (let i = 0; i < 30; i++) {
+      const p = Cards.generateRandomPseudo();
+      if (p.length <= max) return p;
+    }
+    // Last-resort: truncate
+    return Cards.generateRandomPseudo().slice(0, max);
+  }
+
+  /* Apply a random pseudo as PLACEHOLDER (not as value) so:
+       - it shows in gray
+       - it disappears as soon as the user types anything
+       - on submit, we fall back to the placeholder if value is empty
+     The actual chosen value is stored on dataset.suggested so we
+     can use it as the effective pseudo on submit. */
+  function applyPlaceholderPseudo(input) {
+    if (!input) return;
+    const p = suggestPseudoForInput(input);
+    input.value = '';
+    input.placeholder = p;
+    input.dataset.suggested = p;
+    input.classList.add('pseudo-placeholder');
+  }
+  /* Effective pseudo: typed value if any, else the suggested placeholder. */
+  function effectivePseudo(input) {
+    if (!input) return '';
+    const v = (input.value || '').trim();
+    if (v) return v;
+    return (input.dataset.suggested || '').trim();
+  }
 
   function validatePseudo(name) {
     name = (name || '').trim();
@@ -2857,6 +4159,9 @@ html, body {
 
   function cleanupNetworking() {
     if (App.countdownInterval) { clearInterval(App.countdownInterval); App.countdownInterval = null; UI.hideCountdown(); }
+    if (App.publicRefreshInterval) { clearInterval(App.publicRefreshInterval); App.publicRefreshInterval = null; }
+    if (App._directoryHeartbeat) { clearInterval(App._directoryHeartbeat); App._directoryHeartbeat = null; }
+    if (App.soloTurnTimer) { clearTimeout(App.soloTurnTimer); App.soloTurnTimer = null; }
     if (App.hostNet) { try { App.hostNet.close(); } catch {} App.hostNet = null; }
     if (App.directory) {
       try { if (App.roomCode) App.directory.unregisterRoom(App.roomCode); } catch {}
@@ -2867,6 +4172,55 @@ html, body {
     App.game = null;
     App.lobby = { players: [], hostId: 'self', status: 'lobby' };
     App.roomCode = null;
+    App.soloBots = [];
+    if (Chat) { try { Chat.reset(); Chat.hideToggle(); } catch {} }
+  }
+
+  /* =========================================================
+     Browser navigation: pushState so the browser back button
+     navigates between in-app screens instead of leaving the site.
+     ========================================================= */
+  function goTo(screenId, replace) {
+    App.currentScreen = screenId;
+    UI.showScreen(screenId);
+    const state = { screen: screenId };
+    try {
+      if (replace) history.replaceState(state, '', '#' + screenId);
+      else         history.pushState(state, '', '#' + screenId);
+    } catch {}
+    // Reset status lines on entering certain screens
+    if (screenId === 'create') {
+      const s = document.getElementById('create-status');
+      if (s) { s.textContent = ''; s.className = 'status-line'; }
+    }
+    if (screenId === 'join') {
+      const s = document.getElementById('join-status');
+      if (s) { s.textContent = ''; s.className = 'status-line'; }
+    }
+    if (screenId === 'solo') {
+      const s = document.getElementById('solo-status');
+      if (s) { s.textContent = ''; s.className = 'status-line'; }
+    }
+    // Chat toggle only visible in-game
+    if (Chat) {
+      if (screenId === 'game' && App.chatMode !== 'off') Chat.showToggle();
+      else Chat.hideToggle();
+    }
+  }
+
+  function handlePopState(e) {
+    const target = (e.state && e.state.screen) || 'home';
+    // If user navigates back from in-game / lobby, clean up the connection
+    if ((App.currentScreen === 'lobby' || App.currentScreen === 'game' || App.currentScreen === 'gameover')
+        && (target === 'home' || target === 'create' || target === 'join' || target === 'public' || target === 'solo')) {
+      cleanupNetworking();
+    }
+    App.currentScreen = target;
+    UI.showScreen(target);
+    if (Chat) {
+      if (target === 'game' && App.chatMode !== 'off') Chat.showToggle();
+      else Chat.hideToggle();
+    }
   }
 
   /* =========================================================
@@ -2876,27 +4230,55 @@ html, body {
     $('btn-goto-create').addEventListener('click', () => {
       UI.Audio.click();
       const saved = loadNickname();
-      $('input-pseudo-create').value = saved || suggestPseudo();
+      const input = $('input-pseudo-create');
+      if (saved) { input.value = saved; input.placeholder = 'Ton pseudo'; input.dataset.suggested = ''; }
+      else       { applyPlaceholderPseudo(input); }
       const ri = $('input-room-name');
-      ri.value = `Salon de ${$('input-pseudo-create').value}`;
+      ri.value = `Salon de ${effectivePseudo(input)}`;
       ri.dataset.autofill = '1';
-      UI.showScreen('create');
+      // Reset chat mode selector to default
+      const chatSel = $('input-chat-mode');
+      if (chatSel) chatSel.value = App.chatMode || 'normal';
+      goTo('create');
     });
     $('btn-goto-join').addEventListener('click', () => {
       UI.Audio.click();
-      $('input-pseudo-join').value = loadNickname() || suggestPseudo();
-      UI.showScreen('join');
+      const input = $('input-pseudo-join');
+      const saved = loadNickname();
+      if (saved) { input.value = saved; input.placeholder = 'Ton pseudo'; input.dataset.suggested = ''; }
+      else       { applyPlaceholderPseudo(input); }
+      goTo('join');
     });
     $('btn-goto-public').addEventListener('click', () => {
       UI.Audio.click();
-      UI.showScreen('public');
+      goTo('public');
       loadPublicRooms();
+      // Auto-refresh every 5s while viewing the list
+      if (App.publicRefreshInterval) clearInterval(App.publicRefreshInterval);
+      App.publicRefreshInterval = setInterval(() => {
+        if (App.currentScreen === 'public') loadPublicRooms();
+        else { clearInterval(App.publicRefreshInterval); App.publicRefreshInterval = null; }
+      }, 5000);
+    });
+    const btnSolo = $('btn-goto-solo');
+    if (btnSolo) btnSolo.addEventListener('click', () => {
+      UI.Audio.click();
+      const input = $('input-pseudo-solo');
+      const saved = loadNickname();
+      if (saved) { input.value = saved; input.placeholder = 'Ton pseudo'; input.dataset.suggested = ''; }
+      else       { applyPlaceholderPseudo(input); }
+      // Reset bots list
+      App.soloBots = [
+        { id: 'bot-' + Math.random().toString(36).slice(2,8), name: Bots.generateBotName([]), difficulty: 'normal' }
+      ];
+      renderBotList();
+      goTo('solo');
     });
     document.querySelectorAll('.btn-back').forEach(b => {
       b.addEventListener('click', () => {
         UI.Audio.back();
         cleanupNetworking();
-        UI.showScreen(b.dataset.back || 'home');
+        goTo(b.dataset.back || 'home');
       });
     });
   }
@@ -2911,22 +4293,29 @@ html, body {
 
     randomBtn.addEventListener('click', () => {
       UI.Audio.click();
-      pseudoInput.value = suggestPseudo();
-      if (roomNameInput.dataset.autofill === '1') roomNameInput.value = `Salon de ${pseudoInput.value}`;
+      applyPlaceholderPseudo(pseudoInput);
+      if (roomNameInput.dataset.autofill === '1') roomNameInput.value = `Salon de ${effectivePseudo(pseudoInput)}`;
     });
     pseudoInput.addEventListener('input', () => {
-      if (roomNameInput.dataset.autofill === '1') roomNameInput.value = `Salon de ${pseudoInput.value.trim() || '...'}`;
+      // As soon as the user types anything, drop the suggested placeholder (so submit uses the typed value)
+      if (pseudoInput.value.length > 0) pseudoInput.dataset.suggested = '';
+      const effective = effectivePseudo(pseudoInput);
+      if (roomNameInput.dataset.autofill === '1') roomNameInput.value = `Salon de ${effective || '...'}`;
     });
     roomNameInput.addEventListener('input', () => { roomNameInput.dataset.autofill = '0'; });
 
     $('btn-create-room').addEventListener('click', async () => {
-      const pseudo = pseudoInput.value.trim();
+      const pseudo = effectivePseudo(pseudoInput);
       const vp = validatePseudo(pseudo);
       if (!vp.ok) { setStatus('create-status', vp.error, 'error'); UI.Audio.error(); return; }
       let name = roomNameInput.value.trim();
       if (!name) name = `Salon de ${pseudo}`;
       const vn = validateRoomName(name);
       if (!vn.ok) { setStatus('create-status', vn.error, 'error'); UI.Audio.error(); return; }
+
+      // Capture chat mode for this room
+      const chatSel = $('input-chat-mode');
+      App.chatMode = (chatSel && chatSel.value) || 'normal';
 
       App.myNickname = pseudo; saveNickname(pseudo);
       App.roomName = name;
@@ -2958,9 +4347,20 @@ html, body {
           await App.directory.claimOrConnect();
           App.directory.registerRoom({ code: App.roomCode, name: App.roomName, players: 1, max: 8 });
         } catch {}
+        // Heartbeat — re-register every 8s while public. This fixes the
+        // "I created a room but it's not in the public list" bug that
+        // happens after leaving and recreating a room (the previous
+        // Directory peer hadn't fully released the global ID yet).
+        startDirectoryHeartbeat();
       }
-      UI.showScreen('lobby');
+      goTo('lobby');
       renderHostLobby();
+      // Init chat for the host (mode chosen at create)
+      if (Chat) {
+        Chat.setMode(App.chatMode);
+        Chat.setMyName(App.myNickname);
+        Chat.setOnSend((text, isPreset) => hostBroadcastChat(App.myNickname, text, true));
+      }
       // "Salon créé" feedback
       UI.Audio.roomCreated();
       UI.toast(`Salon "${App.roomName}" créé ! Code : ${App.roomCode}`, { success: true, duration: 3500 });
@@ -2970,6 +4370,14 @@ html, body {
   function setupHostEvents() {
     App.hostNet.addEventListener('client-disconnected', (e) => {
       const peerId = e.detail.peerId;
+      const leaver = App.lobby.players.find(p => p.peerId === peerId);
+      const leaverName = leaver ? leaver.name : 'Un joueur';
+      // SFX + chat log
+      UI.Audio.playerLeave();
+      if (Chat) Chat.logEvent(`${leaverName} a quitté la partie`);
+      if (App.hostNet) {
+        try { App.hostNet.broadcast({ type: 'chat-log', text: `${leaverName} a quitté la partie` }); } catch {}
+      }
       if (App.lobby.status === 'lobby') {
         App.lobby.players = App.lobby.players.filter(p => p.peerId !== peerId);
         renderHostLobby();
@@ -2980,10 +4388,35 @@ html, body {
           p.connected = false;
           if (App.game) { const gp = App.game.players.find(g => g.id === p.id); if (gp) gp.connected = false; }
           broadcastState();
+          // If game can't continue, show a crash modal & end gracefully
+          if (App.game && Rules.activeCount(App.game) <= 1) {
+            UI.showCrashModal({
+              code: 'ROOM_EMPTY',
+              reason: 'Plus assez de joueurs connectés pour continuer.',
+              detail: 'Le dernier joueur restant remporte la partie.'
+            });
+          }
         }
       }
     });
     App.hostNet.addEventListener('message', (e) => onHostMessage(e.detail.peerId, e.detail.message));
+  }
+
+  /* =========================================================
+     Host helper: broadcast a chat message written locally by the host
+     ========================================================= */
+  function hostBroadcastChat(author, text, isPreset) {
+    if (!App.hostNet || App.chatMode === 'off') return;
+    if (App.chatMode === 'simple' && !isPreset) return;
+    const trimmed = String(text || '').slice(0, 100);
+    if (!trimmed) return;
+    if (App.chatMode === 'normal' && !isPreset && window.UnoChat) {
+      const filt = window.UnoChat.filterMessage(trimmed);
+      if (!filt.ok) { UI.toast(filt.reason, { error: true }); UI.Audio.error(); return; }
+    }
+    const payload = { type: 'chat-message', author, text: trimmed, isPreset, timestamp: Date.now() };
+    App.hostNet.broadcast(payload);
+    if (Chat) Chat.receiveMessage({ author, text: trimmed, fromSelf: true, timestamp: payload.timestamp });
   }
 
   function onHostMessage(peerId, msg) {
@@ -3020,15 +4453,48 @@ html, body {
         }
         App.hostNet.sendTo(peerId, {
           type: 'welcome', yourId: peerId, hostId: 'self',
-          assignedName: name, isPublic: App.isPublic, lobby: serializeLobby()
+          assignedName: name, isPublic: App.isPublic, lobby: serializeLobby(),
+          chatMode: App.chatMode
         });
         broadcastLobby();
         updateDirectory();
+        // SFX + log "X a rejoint"
+        UI.Audio.playerJoin();
+        if (Chat) Chat.logEvent(`${name} a rejoint le salon`);
+        App.hostNet.broadcast({ type: 'chat-log', text: `${name} a rejoint le salon` });
         break;
       }
       case 'set-ready': {
         const p = App.lobby.players.find(p => p.peerId === peerId);
-        if (p) { p.ready = !!msg.ready; broadcastLobby(); }
+        if (p) {
+          p.ready = !!msg.ready;
+          if (p.ready) {
+            UI.Audio.playerReady();
+            if (Chat) Chat.logEvent(`${p.name} est prêt`);
+            App.hostNet.broadcast({ type: 'chat-log', text: `${p.name} est prêt` });
+          }
+          broadcastLobby();
+        }
+        break;
+      }
+      case 'chat-message': {
+        // Client → host: receive a chat msg, validate, and rebroadcast
+        const p = App.lobby.players.find(pp => pp.peerId === peerId);
+        if (!p) return;
+        if (App.chatMode === 'off') return;
+        const text = String(msg.text || '').slice(0, 100);
+        const isPreset = !!msg.isPreset;
+        if (App.chatMode === 'simple' && !isPreset) return;
+        // Filter in normal mode
+        if (App.chatMode === 'normal' && !isPreset && window.UnoChat) {
+          const filt = window.UnoChat.filterMessage(text);
+          if (!filt.ok) { App.hostNet.sendTo(peerId, { type: 'notify', message: filt.reason }); return; }
+        }
+        // Broadcast to everyone (including back to sender for echo)
+        const payload = { type: 'chat-message', author: p.name, text, isPreset, timestamp: Date.now() };
+        App.hostNet.broadcast(payload);
+        // Display locally for the host
+        if (Chat) Chat.receiveMessage({ author: p.name, text, fromSelf: false, timestamp: payload.timestamp });
         break;
       }
       case 'rename': {
@@ -3085,6 +4551,25 @@ html, body {
     } else {
       try { App.directory.unregisterRoom(App.roomCode); } catch {}
     }
+  }
+
+  /* Re-register the room with the directory periodically — ensures
+     visibility even after PeerJS reconnects, claim races, etc. */
+  function startDirectoryHeartbeat() {
+    if (App._directoryHeartbeat) clearInterval(App._directoryHeartbeat);
+    App._directoryHeartbeat = setInterval(() => {
+      if (!App.directory || !App.roomCode || !App.isPublic) return;
+      if (App.lobby.status !== 'lobby') return; // stop publishing once game starts
+      try {
+        App.directory.registerRoom({
+          code: App.roomCode, name: App.roomName,
+          players: App.lobby.players.length, max: 8
+        });
+      } catch {}
+    }, 8000);
+  }
+  function stopDirectoryHeartbeat() {
+    if (App._directoryHeartbeat) { clearInterval(App._directoryHeartbeat); App._directoryHeartbeat = null; }
   }
 
   function renderHostLobby() {
@@ -3168,7 +4653,7 @@ html, body {
     if (App.directory && App.isPublic) { try { App.directory.unregisterRoom(App.roomCode); } catch {} }
     UI.resetTurnTracker();
     App.hostNet.broadcast({ type: 'game-start' });
-    UI.showScreen('game');
+    goTo('game');
     broadcastState();
   }
 
@@ -3276,9 +4761,9 @@ html, body {
   function showGameOver() {
     if (App.role === 'host' && App.game) {
       const view = buildView(App.game, 'self');
-      App.hostNet.broadcast({ type: 'game-over', view });
+      if (App.hostNet) try { App.hostNet.broadcast({ type: 'game-over', view }); } catch {}
       UI.renderGameOver(view);
-      UI.showScreen('gameover');
+      goTo('gameover');
       const myFinish = view.players.find(p => p.id === 'self')?.finishedRank;
       if (myFinish === 1) UI.Audio.win(); else UI.Audio.lose();
     }
@@ -3332,7 +4817,7 @@ html, body {
     for (const p of App.lobby.players) p.ready = false;
     App.game = null;
     broadcastLobby();
-    UI.showScreen('lobby');
+    goTo('lobby');
   }
 
   /* =========================================================
@@ -3371,13 +4856,17 @@ html, body {
      JOIN / PUBLIC
      ========================================================= */
   function initJoin() {
+    const pseudoInputJoin = $('input-pseudo-join');
     $('btn-random-pseudo-join').addEventListener('click', () => {
       UI.Audio.click();
-      $('input-pseudo-join').value = suggestPseudo();
+      applyPlaceholderPseudo(pseudoInputJoin);
+    });
+    pseudoInputJoin.addEventListener('input', () => {
+      if (pseudoInputJoin.value.length > 0) pseudoInputJoin.dataset.suggested = '';
     });
     $('input-room-code').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
     $('btn-join-room').addEventListener('click', () => {
-      const pseudo = $('input-pseudo-join').value.trim();
+      const pseudo = effectivePseudo(pseudoInputJoin);
       const code = $('input-room-code').value.trim().toUpperCase();
       const vp = validatePseudo(pseudo);
       if (!vp.ok) { setStatus('join-status', vp.error, 'error'); UI.Audio.error(); return; }
@@ -3406,7 +4895,13 @@ html, body {
     App.clientNet.addEventListener('message', (e) => onClientMessage(e.detail));
     App.clientNet.addEventListener('disconnected', () => {
       UI.toast("Connexion perdue avec l'hôte.", { error: true });
-      setTimeout(() => { cleanupNetworking(); UI.showScreen('home'); }, 1500);
+      // Show crash modal with downloadable error report
+      UI.showCrashModal({
+        code: 'PEER_DISCONNECT',
+        reason: 'Connexion avec l\'hôte perdue.',
+        detail: 'La partie a été interrompue (timeout, déconnexion réseau, ou l\'hôte a quitté).'
+      });
+      setTimeout(() => { cleanupNetworking(); goTo('home'); }, 1500);
     });
   }
 
@@ -3418,7 +4913,17 @@ html, body {
         App.myNickname = msg.assignedName || App.myNickname; saveNickname(App.myNickname);
         App.clientIsPublic = !!msg.isPublic;
         App.clientLastLobby = msg.lobby;
-        UI.showScreen('lobby'); renderClientLobby(msg.lobby);
+        App.chatMode = msg.chatMode || 'normal';
+        if (Chat) {
+          Chat.setMode(App.chatMode);
+          Chat.setMyName(App.myNickname);
+          Chat.setOnSend((text, isPreset) => {
+            if (App.clientNet) App.clientNet.send({ type: 'chat-message', text, isPreset });
+            // Local echo will arrive via broadcast; display optimistically
+            Chat.receiveMessage({ author: App.myNickname, text, fromSelf: true, timestamp: Date.now() });
+          });
+        }
+        goTo('lobby'); renderClientLobby(msg.lobby);
         break;
       case 'lobby':
         App.clientLastLobby = msg.lobby; App.clientIsPublic = !!msg.isPublic;
@@ -3435,7 +4940,7 @@ html, body {
         break;
       case 'countdown':       UI.showCountdown(msg.n); UI.Audio.countdown(); break;
       case 'countdown-cancel': UI.cancelCountdown(); break;
-      case 'game-start':      UI.hideCountdown(); UI.resetTurnTracker(); UI.showScreen('game'); break;
+      case 'game-start':      UI.hideCountdown(); UI.resetTurnTracker(); goTo('game'); break;
       case 'state':
         App.clientLastView = msg.view;
         UI.renderGame(msg.view, makeGameHandlers('client'));
@@ -3443,17 +4948,30 @@ html, body {
         break;
       case 'prompt-challenge': promptChallengeClient(); break;
       case 'game-over':
-        UI.renderGameOver(msg.view); UI.showScreen('gameover');
+        UI.renderGameOver(msg.view); goTo('gameover');
         const me = msg.view.players.find(p => p.id === App.clientMyId);
         if (me?.finishedRank === 1) UI.Audio.win(); else UI.Audio.lose();
         break;
       case 'kicked':
         UI.toast(msg.reason === 'banned' ? "Tu as été banni du salon." : "Tu as été exclu du salon.", { error: true });
         if (msg.reason === 'banned' && App.roomCode) addBannedFrom(App.roomCode);
-        setTimeout(() => { cleanupNetworking(); UI.showScreen('home'); }, 1500);
+        setTimeout(() => { cleanupNetworking(); goTo('home'); }, 1500);
         break;
       case 'notify': UI.toast(msg.message); break;
       case 'error':  UI.toast('Erreur : ' + msg.message, { error: true }); UI.Audio.error(); break;
+      case 'chat-message': {
+        // Don't double-display our own echoed messages
+        if (msg.author === App.myNickname) break;
+        if (Chat) Chat.receiveMessage({ author: msg.author, text: msg.text, fromSelf: false, timestamp: msg.timestamp });
+        break;
+      }
+      case 'chat-log': {
+        if (Chat) Chat.logEvent(msg.text);
+        if (/a rejoint/.test(msg.text)) UI.Audio.playerJoin();
+        else if (/a quitté/.test(msg.text)) UI.Audio.playerLeave();
+        else if (/est prêt/.test(msg.text)) UI.Audio.playerReady();
+        break;
+      }
       case 'fx-skip':    UI.showSkipOverlay();    UI.Audio.skip(); break;
       case 'fx-reverse': UI.showReverseOverlay(); UI.Audio.reverse(); break;
       case 'fx-draw2':   UI.showDraw2Overlay(msg.targetName); UI.Audio.cardDraw(); break;
@@ -3594,8 +5112,10 @@ html, body {
             players: App.lobby.players.length, max: 8
           });
         } catch {}
+        startDirectoryHeartbeat();
       } else {
         // Going private: unregister but keep directory connection alive.
+        stopDirectoryHeartbeat();
         if (App.directory) {
           try { App.directory.unregisterRoom(App.roomCode); } catch {}
         }
@@ -3641,6 +5161,29 @@ html, body {
 
   function initGameControls() {
     $('draw-pile').addEventListener('click', () => {
+      // Client-side guard: prevent the visual flash that happens when the
+      // server rejects a duplicate draw. If we already drew this turn,
+      // show a toast instead of sending the action.
+      const view = (App.role === 'host')
+        ? (App.game ? buildView(App.game, 'self') : null)
+        : App.clientLastView;
+      if (view) {
+        if (view.currentPlayerId !== view.myId) {
+          // Not our turn
+          const el = document.getElementById('draw-pile');
+          if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 350); }
+          UI.toast("Ce n'est pas ton tour !", { error: true });
+          UI.Audio.error();
+          return;
+        }
+        if (view.waitingForDrawDecision) {
+          const el = document.getElementById('draw-pile');
+          if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 350); }
+          UI.toast("Tu as déjà pioché — joue la carte ou passe.", { error: true });
+          UI.Audio.error();
+          return;
+        }
+      }
       if (App.role === 'host') applyAction('self', { type: 'action-draw' });
       else if (App.role === 'client') App.clientNet.send({ type: 'action-draw' });
     });
@@ -3659,7 +5202,7 @@ html, body {
       if (!ok) return;
       UI.Audio.back();
       cleanupNetworking();
-      UI.showScreen('home');
+      goTo('home');
     });
   }
 
@@ -3667,7 +5210,7 @@ html, body {
     $('btn-back-home').addEventListener('click', () => {
       UI.Audio.back();
       cleanupNetworking();
-      UI.showScreen('home');
+      goTo('home');
     });
     $('btn-rematch').addEventListener('click', () => {
       UI.Audio.click();
@@ -3681,6 +5224,261 @@ html, body {
 
   function initPublicRoomsControls() {
     $('btn-refresh-public').addEventListener('click', () => { UI.Audio.click(); loadPublicRooms(); });
+  }
+
+  /* =========================================================
+     SOLO MODE (vs bots, local game)
+     ========================================================= */
+  function renderBotList() {
+    const root = $('bot-list');
+    if (!root) return;
+    root.innerHTML = '';
+    App.soloBots.forEach((bot, idx) => {
+      const row = document.createElement('div');
+      row.className = 'bot-row';
+      const name = document.createElement('input');
+      name.type = 'text';
+      name.maxLength = 16;
+      name.value = bot.name;
+      name.addEventListener('input', () => { bot.name = name.value; });
+      const diff = document.createElement('select');
+      diff.innerHTML = `
+        <option value="easy">Facile</option>
+        <option value="normal">Normal</option>
+        <option value="hard">Difficile</option>
+      `;
+      diff.value = bot.difficulty;
+      diff.addEventListener('change', () => { bot.difficulty = diff.value; });
+      const rem = document.createElement('button');
+      rem.className = 'bot-remove';
+      rem.textContent = '✕';
+      rem.title = 'Retirer ce bot';
+      rem.addEventListener('click', () => {
+        App.soloBots.splice(idx, 1);
+        renderBotList();
+      });
+      row.appendChild(name);
+      row.appendChild(diff);
+      row.appendChild(rem);
+      root.appendChild(row);
+    });
+    const addBtn = $('btn-add-bot');
+    if (addBtn) addBtn.disabled = App.soloBots.length >= 3;
+  }
+
+  function initSoloControls() {
+    const pseudoInput = $('input-pseudo-solo');
+    if (!pseudoInput) return;
+    const randBtn = $('btn-random-pseudo-solo');
+    if (randBtn) randBtn.addEventListener('click', () => {
+      UI.Audio.click();
+      applyPlaceholderPseudo(pseudoInput);
+    });
+    pseudoInput.addEventListener('input', () => {
+      if (pseudoInput.value.length > 0) pseudoInput.dataset.suggested = '';
+    });
+    const addBtn = $('btn-add-bot');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      UI.Audio.click();
+      if (App.soloBots.length >= 3) return;
+      const existing = App.soloBots.map(b => b.name);
+      App.soloBots.push({
+        id: 'bot-' + Math.random().toString(36).slice(2, 8),
+        name: Bots.generateBotName(existing),
+        difficulty: 'normal'
+      });
+      renderBotList();
+    });
+    const startBtn = $('btn-start-solo');
+    if (startBtn) startBtn.addEventListener('click', () => {
+      UI.Audio.click();
+      startSoloGame();
+    });
+  }
+
+  function startSoloGame() {
+    const pseudoInput = $('input-pseudo-solo');
+    const pseudo = effectivePseudo(pseudoInput);
+    const vp = validatePseudo(pseudo);
+    if (!vp.ok) { setStatus('solo-status', vp.error, 'error'); UI.Audio.error(); return; }
+    if (App.soloBots.length < 1) {
+      setStatus('solo-status', 'Au moins 1 bot requis.', 'error'); UI.Audio.error(); return;
+    }
+    // Validate bot names
+    const names = new Set([pseudo.toLowerCase()]);
+    for (const b of App.soloBots) {
+      const n = (b.name || '').trim();
+      if (n.length < 2) { setStatus('solo-status', `Nom de bot trop court : "${b.name}"`, 'error'); return; }
+      if (names.has(n.toLowerCase())) { setStatus('solo-status', `Nom en double : "${n}"`, 'error'); return; }
+      names.add(n.toLowerCase());
+    }
+    App.myNickname = pseudo; saveNickname(pseudo);
+    App.role = 'solo';
+    App.roomName = 'Mode solo';
+    App.lobby = {
+      players: [{ id: 'self', peerId: 'self', name: pseudo, ready: true, connected: true }]
+        .concat(App.soloBots.map(b => ({ id: b.id, peerId: 'bot', name: b.name, ready: true, connected: true, isBot: true }))),
+      hostId: 'self', status: 'playing'
+    };
+    App.game = Rules.createGame(App.lobby.players.map(p => ({ id: p.id, name: p.name })));
+    // Tag bots in the game state too
+    for (const gp of App.game.players) {
+      const lp = App.lobby.players.find(l => l.id === gp.id);
+      gp.isBot = !!(lp && lp.isBot);
+    }
+    Rules.startRound(App.game);
+    UI.resetTurnTracker();
+    goTo('game');
+    renderSoloGameView();
+    // Disable the chat toggle in solo
+    App.chatMode = 'off';
+    if (Chat) Chat.setMode('off');
+    // Kick off the bot turn loop
+    maybeRunBotTurn();
+  }
+
+  function renderSoloGameView() {
+    if (!App.game) return;
+    const view = buildView(App.game, 'self');
+    // Tag opponents with isBot from lobby
+    view.players = view.players.map(p => {
+      const lp = App.lobby.players.find(l => l.id === p.id);
+      return Object.assign({}, p, { isBot: !!(lp && lp.isBot) });
+    });
+    UI.renderGame(view, makeSoloGameHandlers());
+    if (view.status === 'choosing-color' && view.players[0]?.id === 'self') {
+      UI.showColorPicker().then(c => {
+        Rules.chooseInitialColor(App.game, c);
+        renderSoloGameView();
+        maybeRunBotTurn();
+      });
+    }
+    if (view.status === 'game-over') {
+      setTimeout(() => {
+        UI.renderGameOver(view);
+        goTo('gameover');
+        const myFinish = view.players.find(p => p.id === 'self')?.finishedRank;
+        if (myFinish === 1) UI.Audio.win(); else UI.Audio.lose();
+      }, 1200);
+    }
+  }
+
+  function makeSoloGameHandlers() {
+    return {
+      onPlayCard: async (card) => {
+        let chosenColor = null;
+        if (card.type === 'wild' || card.type === 'wild4') chosenColor = await UI.showColorPicker();
+        const result = Rules.playCard(App.game, 'self', card.id, chosenColor);
+        if (!result.ok) { UI.toast(result.error || 'Action invalide.', { error: true }); UI.Audio.error(); return; }
+        if (result.card) { triggerFxLocal(result.card); UI.Audio.cardPlay(); }
+        renderSoloGameView();
+        if (result.awaitingChallenge) {
+          const targetId = App.game.lastAction?.targetId;
+          if (targetId === 'self') promptChallengeLocalSolo();
+          else if (targetId) {
+            // Bot decides
+            setTimeout(() => {
+              const targetBot = App.soloBots.find(b => b.id === targetId);
+              const want = Bots.shouldChallenge(App.game, targetId, targetBot ? targetBot.difficulty : 'normal');
+              Rules.resolveChallenge(App.game, want);
+              renderSoloGameView();
+              maybeRunBotTurn();
+            }, 900);
+          }
+        } else {
+          maybeRunBotTurn();
+        }
+      },
+      onCatchUno: (accusedId) => {
+        Rules.catchUno(App.game, accusedId, 'self');
+        renderSoloGameView();
+      }
+    };
+  }
+
+  async function promptChallengeLocalSolo() {
+    const ans = await UI.showChallengeModal();
+    Rules.resolveChallenge(App.game, ans);
+    renderSoloGameView();
+    maybeRunBotTurn();
+  }
+
+  function triggerFxLocal(card) {
+    const target = App.game.players[App.game.currentPlayer]?.name || '';
+    if (card.type === 'skip')    { UI.showSkipOverlay(); UI.Audio.skip(); }
+    else if (card.type === 'reverse') { UI.showReverseOverlay(); UI.Audio.reverse(); }
+    else if (card.type === 'draw2')   { UI.showDraw2Overlay(target); UI.Audio.cardDraw(); }
+    else if (card.type === 'wild4')   { UI.showDraw4Overlay(target); UI.Audio.cardDraw(); }
+  }
+
+  function maybeRunBotTurn() {
+    if (App.role !== 'solo' || !App.game) return;
+    if (App.game.status === 'game-over') return;
+    const cur = App.game.players[App.game.currentPlayer];
+    if (!cur) return;
+    if (cur.id === 'self') return; // human plays
+    if (cur.finishedRank) {
+      // Skip finished bots
+      App.game.currentPlayer = Rules.nextIndex(App.game, 1);
+      renderSoloGameView();
+      return maybeRunBotTurn();
+    }
+    const bot = App.soloBots.find(b => b.id === cur.id);
+    if (!bot) return;
+    if (App.soloTurnTimer) clearTimeout(App.soloTurnTimer);
+    App.soloTurnTimer = setTimeout(() => {
+      doBotAction(bot);
+    }, Bots.thinkDelay(bot.difficulty));
+  }
+
+  function doBotAction(bot) {
+    if (!App.game) return;
+    const action = Bots.chooseAction(App.game, bot.id, bot.difficulty);
+    if (!action) return;
+    let result;
+    switch (action.type) {
+      case 'choose-color':
+        Rules.chooseInitialColor(App.game, action.color);
+        renderSoloGameView();
+        return maybeRunBotTurn();
+      case 'play':
+        result = Rules.playCard(App.game, bot.id, action.cardId, action.chosenColor);
+        if (result.ok) {
+          if (result.card) { triggerFxLocal(result.card); UI.Audio.cardPlay(); }
+          // Decide UNO callout
+          const me = App.game.players.find(p => p.id === bot.id);
+          if (me && me.hand.length === 1 && Bots.shouldCallUno(bot.difficulty)) {
+            Rules.callUno(App.game, bot.id);
+            UI.showUnoCallOverlay(me.name); UI.Audio.uno();
+          }
+        }
+        break;
+      case 'draw':
+        result = Rules.drawForCurrentPlayer(App.game, bot.id);
+        if (result.ok) UI.Audio.cardDraw();
+        break;
+      case 'pass':
+        Rules.passAfterDraw(App.game, bot.id);
+        break;
+    }
+    renderSoloGameView();
+    if (App.game.status === 'game-over') return;
+    if (result && result.awaitingChallenge) {
+      // The target reacts
+      const targetId = App.game.lastAction?.targetId;
+      setTimeout(() => {
+        if (targetId === 'self') promptChallengeLocalSolo();
+        else if (targetId) {
+          const tBot = App.soloBots.find(b => b.id === targetId);
+          const want = Bots.shouldChallenge(App.game, targetId, tBot ? tBot.difficulty : 'normal');
+          Rules.resolveChallenge(App.game, want);
+          renderSoloGameView();
+          maybeRunBotTurn();
+        }
+      }, 800);
+      return;
+    }
+    maybeRunBotTurn();
   }
 
   function initAudioControls() {
@@ -3724,6 +5522,13 @@ html, body {
       initHome(); initCreate(); initJoin();
       initLobbyControls(); initGameControls(); initGameOverControls();
       initPublicRoomsControls(); initAudioControls();
+      initSoloControls();
+      // Init the chat module (binds DOM, hides toggle until in-game)
+      if (Chat) Chat.init();
+      // Browser navigation
+      window.addEventListener('popstate', handlePopState);
+      // Establish initial history state so the FIRST back-press doesn't leave the site
+      try { history.replaceState({ screen: 'home' }, '', '#home'); } catch {}
     } catch (err) {
       console.error('Bootstrap error:', err);
       const banner = document.getElementById('boot-error');
