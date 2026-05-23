@@ -47,60 +47,120 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Audio toggle bar */
-.audio-bar {
-  /* v11.2: centered horizontally at the top so it doesn't cover the
-     "🚪 Quitter" button at the top-right of the game topbar (previous
-     v11 position had it overlapping that button on desktop). */
+/* v11.3: ⚙️ settings button + modal (replaces the old audio-bar) */
+.btn-settings {
   position: fixed;
   top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex; gap: 10px;
-  z-index: 1100;                    /* above chat panel (450) so it stays accessible */
-  background: rgba(22,27,34,0.85);
-  padding: 6px 8px;
-  border-radius: 8px;
+  right: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   border: 1px solid var(--border);
+  background: rgba(22,27,34,0.9);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(6px);
-  align-items: center;
-  transition: opacity .2s ease;
-  max-width: calc(100vw - 16px);
+  transition: transform .15s ease, background .15s ease;
+  padding: 0;
+  line-height: 1;
 }
-/* v11.2: with the bar now centered, no need to slide it left when the chat
-   opens (the chat is on the right). On narrow viewports we still hide it
-   to avoid layout collisions. */
+.btn-settings:hover { transform: rotate(45deg); background: var(--bg-3, #2a2f37); }
 @media (max-width: 600px) {
-  body.chat-is-open .audio-bar { display: none; }
+  .btn-settings { width: 34px; height: 34px; font-size: 16px; top: 4px; right: 4px; }
 }
+/* When the game-topbar is visible (screen-game active), shift the gear LEFT
+   so it sits next to the leave button instead of covering it. The leave
+   button is approximately 90px wide in game-topbar's right cluster. */
+body.screen-active-game .btn-settings { right: 110px; }
+@media (max-width: 600px) {
+  body.screen-active-game .btn-settings { right: 88px; top: 6px; }
+}
+/* Hide gear on mobile when chat panel is open (panel covers the area). */
+@media (max-width: 600px) {
+  body.chat-is-open .btn-settings { display: none; }
+}
+
+/* Settings modal — uses .modal-overlay pattern with its own internal layout */
+#settings-modal { z-index: 1500; }  /* above .btn-settings (1100) */
+.settings-modal {
+  max-width: 380px;
+  width: calc(100% - 32px);
+  padding: 20px 22px 18px;
+}
+.settings-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.settings-header h2 { margin: 0; font-size: 18px; }
+.settings-close {
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 22px; line-height: 1;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: background .15s ease, color .15s ease;
+}
+.settings-close:hover { color: #fff; background: var(--danger); }
+.settings-section {
+  margin: 12px 0;
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.settings-section h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+.settings-section .audio-group { display: flex; gap: 10px; align-items: center; height: 32px; }
+.settings-section .audio-group input[type="range"] {
+  flex: 1;
+  width: auto;
+  height: 4px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.settings-section .audio-group .btn-icon-sm {
+  min-width: 78px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  white-space: nowrap; line-height: 1;
+}
+.vol-pct {
+  min-width: 38px;
+  text-align: right;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.settings-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 10px 0 0;
+  font-style: italic;
+}
+
+/* Keep the .audio-group base styles (still used in the modal) */
 .audio-group {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
 }
 .audio-group input[type="range"] {
-  width: 70px;
-  height: 4px;
-  margin: 0;
-  padding: 0;
   accent-color: var(--accent);
   cursor: pointer;
   vertical-align: middle;
 }
 .audio-group .btn-icon-sm {
-  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   white-space: nowrap;
-}
-@media (max-width: 600px) {
-  .audio-bar { gap: 6px; padding: 4px 6px; top: 4px; }
-  .audio-group { gap: 4px; height: 26px; }
-  .audio-group input[type="range"] { width: 48px; }
-  .audio-group .btn-icon-sm { height: 22px; font-size: 10px; padding: 2px 6px; }
 }
 .btn-icon-sm {
   background: var(--bg-2);
@@ -1219,14 +1279,36 @@ html, body {
     })();
   </script>
 
-  <div class="audio-bar">
-    <div class="audio-group">
-      <button id="btn-toggle-sfx" class="btn-icon-sm">🔊 SFX</button>
-      <input id="slider-master" type="range" min="0" max="100" value="50" title="Volume général" />
-    </div>
-    <div class="audio-group">
-      <button id="btn-toggle-music" class="btn-icon-sm">🎵 OFF</button>
-      <input id="slider-music" type="range" min="0" max="100" value="30" title="Volume musique" />
+  <!-- v11.3: replaced the always-visible audio bar with a single ⚙️ button.
+       The bar was overlapping the in-game color pill / leave button. Volume
+       controls now live in a modal opened by this button. -->
+  <button id="btn-settings" class="btn-settings" title="Paramètres">⚙️</button>
+
+  <!-- Settings modal (audio volume + toggles). Reuses the existing .modal /
+       .modal-content pattern. -->
+  <div id="settings-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content settings-modal" role="dialog" aria-labelledby="settings-title">
+      <div class="settings-header">
+        <h2 id="settings-title">Paramètres</h2>
+        <button id="btn-settings-close" class="settings-close" title="Fermer">✕</button>
+      </div>
+      <div class="settings-section">
+        <h3>Effets sonores (SFX)</h3>
+        <div class="audio-group">
+          <button id="btn-toggle-sfx" class="btn-icon-sm">🔊 SFX</button>
+          <input id="slider-master" type="range" min="0" max="100" value="50" title="Volume SFX" />
+          <span id="label-master-pct" class="vol-pct">50%</span>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Musique de fond</h3>
+        <div class="audio-group">
+          <button id="btn-toggle-music" class="btn-icon-sm">🎵 OFF</button>
+          <input id="slider-music" type="range" min="0" max="100" value="30" title="Volume musique" />
+          <span id="label-music-pct" class="vol-pct">30%</span>
+        </div>
+      </div>
+      <p class="settings-hint">Les deux volumes sont indépendants — le SFX n'affecte plus la musique.</p>
     </div>
   </div>
 
@@ -3236,6 +3318,13 @@ html, body {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById('screen-' + id);
     if (el) el.classList.add('active');
+    // v11.3: mirror the active screen as a body class so CSS rules can
+    // adapt UI to the current screen (e.g. shifting the ⚙️ gear button
+    // left when the game-topbar is showing).
+    document.body.className = document.body.className
+      .replace(/\bscreen-active-[a-z0-9-]+/g, '')
+      .trim();
+    document.body.classList.add('screen-active-' + id);
   }
 
   /* =========================================================
@@ -4039,7 +4128,14 @@ html, body {
       this.masterGain.connect(this.ctx.destination);
       this.musicGain = this.ctx.createGain();
       this.musicGain.gain.value = this.musicVolume;
-      this.musicGain.connect(this.masterGain);
+      // v11.3: music routes DIRECTLY to destination, NOT through masterGain.
+      // Previously: musicGain → masterGain → destination, so effective music
+      // volume = masterVolume × musicVolume — cranking the SFX slider also
+      // cranked the music, and music at 100% but SFX at 50% only got 50% of
+      // the music. Now they're fully independent:
+      //   SFX  = masterVolume (HTMLAudio.volume on clones; synth via masterGain)
+      //   Music = musicVolume  (HTMLAudio.volume on tracks; Web Audio via musicGain)
+      this.musicGain.connect(this.ctx.destination);
     },
 
     // Back-compat: init() = preloadFiles() + _initContext().
@@ -5957,9 +6053,13 @@ html, body {
     const music = $('btn-toggle-music');
     const masterSlider = $('slider-master');
     const musicSlider  = $('slider-music');
+    const masterPct    = $('label-master-pct');   // v11.3
+    const musicPct     = $('label-music-pct');    // v11.3
     const vols = loadVolumes();
     if (masterSlider) { masterSlider.value = Math.round(vols.master * 100); UI.Audio.setMasterVolume(vols.master); }
     if (musicSlider)  { musicSlider.value  = Math.round(vols.music  * 100); UI.Audio.setMusicVolume(vols.music);  }
+    if (masterPct) masterPct.textContent = Math.round(vols.master * 100) + '%';
+    if (musicPct)  musicPct.textContent  = Math.round(vols.music  * 100) + '%';
     function updateBtns() {
       sfx.textContent = UI.Audio.enabled ? '🔊 SFX' : '🔇 SFX';
       music.textContent = UI.Audio.musicOn ? '🎵 ON' : '🎵 OFF';
@@ -5978,14 +6078,42 @@ html, body {
     if (masterSlider) masterSlider.addEventListener('input', () => {
       const v = parseInt(masterSlider.value, 10) / 100;
       UI.Audio.setMasterVolume(v);
+      if (masterPct) masterPct.textContent = Math.round(v * 100) + '%';
       const cur = loadVolumes(); cur.master = v; saveVolumes(cur);
     });
     if (musicSlider) musicSlider.addEventListener('input', () => {
       const v = parseInt(musicSlider.value, 10) / 100;
       UI.Audio.setMusicVolume(v);
+      if (musicPct) musicPct.textContent = Math.round(v * 100) + '%';
       const cur = loadVolumes(); cur.music = v; saveVolumes(cur);
     });
     updateBtns();
+
+    // v11.3: ⚙️ button + settings modal open/close wiring.
+    const gear = $('btn-settings');
+    const modal = $('settings-modal');
+    const closeBtn = $('btn-settings-close');
+    function openSettings() {
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.setAttribute('aria-hidden', 'false');
+      UI.Audio.click();
+    }
+    function closeSettings() {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    if (gear) gear.addEventListener('click', openSettings);
+    if (closeBtn) closeBtn.addEventListener('click', closeSettings);
+    if (modal) modal.addEventListener('click', (e) => {
+      // Click on the dark overlay (not the inner panel) closes the modal.
+      if (e.target === modal) closeSettings();
+    });
+    // Escape key closes the modal.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeSettings();
+    });
   }
 
   function bootstrap() {
