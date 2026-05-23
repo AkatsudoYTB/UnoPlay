@@ -52,13 +52,20 @@ html, body {
   position: fixed;
   top: 8px; right: 8px;
   display: flex; gap: 10px;
-  z-index: 500;
+  z-index: 1100;                    /* v11: above chat panel (450) so it stays accessible */
   background: rgba(22,27,34,0.85);
   padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid var(--border);
   backdrop-filter: blur(6px);
   align-items: center;
+  transition: right .25s ease, opacity .2s ease;
+}
+/* v11: when chat panel is open on desktop, slide audio bar left so it doesn't
+   overlap the chat header. On mobile we just hide it (chat takes full width). */
+body.chat-is-open .audio-bar { right: 358px; }
+@media (max-width: 600px) {
+  body.chat-is-open .audio-bar { display: none; }
 }
 .audio-group {
   display: flex;
@@ -422,6 +429,14 @@ html, body {
   user-select: none;
   cursor: pointer;
   overflow: hidden;
+  /* v11: aggressive paint clipping so nothing (wild wheel, +2 symbol, +4 symbol)
+     can paint outside the rounded card rectangle, even in browsers that
+     sometimes fail to honor overflow:hidden combined with transforms or
+     aspect-ratio (Safari/Firefox quirks). */
+  contain: paint;
+  isolation: isolate;
+  clip-path: inset(0 round 12px);
+  -webkit-clip-path: inset(0 round 12px);
 }
 .card.red    { background: var(--uno-red); }
 .card.blue   { background: var(--uno-blue); }
@@ -432,6 +447,8 @@ html, body {
 .card-inner {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
+  overflow: hidden;       /* v11: extra safety belt against child overflow */
+  border-radius: inherit;
 }
 
 /* The classic UNO oval in the middle, rotated, with white outline */
@@ -453,6 +470,13 @@ html, body {
   line-height: 1;
   text-shadow: 2px 2px 0 rgba(0,0,0,.35), -2px -2px 0 rgba(0,0,0,.15);
   /* Number/symbol stays UPRIGHT (no rotation) */
+  /* v11: bound the centered glyph (numbers, +2, +4, skip, reverse) so it
+     can never paint past the card edge on small viewports where the card
+     width is tighter than the original fixed SVG sizes. */
+  max-width: 92%;
+  max-height: 82%;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
 .card.yellow .card-center { text-shadow: 2px 2px 0 rgba(255,255,255,.4); }
 
@@ -475,9 +499,16 @@ html, body {
 .card-corner.br { bottom: 6px; right: 8px; transform: rotate(180deg); }
 
 /* SVG symbol sizes */
-.sym-svg.large { width: 52px; height: 52px; }
+.sym-svg.large { width: 52px; height: 52px; max-width: 100%; max-height: 100%; }
 .sym-svg.small { width: 16px; height: 16px; }
-.card-center .sym-svg.large { width: 60px; height: 60px; }
+.card-center .sym-svg.large {
+  /* v11: cap at 65% of card width on small screens to prevent +2/+4/skip
+     from overflowing the 52px-wide mobile cards (was a fixed 60px). */
+  width: min(60px, 65%);
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
 
 /* Card back: black with red oval and yellow "UnoPlay" badge */
 .card-back {
@@ -690,12 +721,22 @@ html, body {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  width: 78%;
-  aspect-ratio: 1 / 1;
+  /* v11: use calc() based on --card-w (with a max-width safety) instead of
+     `width: 78%; aspect-ratio: 1/1`. Some browsers (Safari, older Firefox)
+     mis-compute aspect-ratio when combined with absolute positioning + flex
+     centering, which let the wheel bleed onto the next card in the hand
+     fan (cards overlap with negative margin-left).
+     calc() guarantees a true square that's strictly bounded by card width. */
+  width:  calc(var(--card-w) * 0.70);
+  height: calc(var(--card-w) * 0.70);
+  max-width: 85%;
+  max-height: 85%;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
 }
 .card .wild-wheel .wild-svg {
   width: 100%;
@@ -867,9 +908,12 @@ html, body {
 #chat-panel .chat-header h3 { margin: 0; font-size: 15px; }
 #chat-panel .chat-close {
   background: none; border: none; color: var(--text-dim);
-  cursor: pointer; font-size: 18px; line-height: 1;
+  cursor: pointer; font-size: 22px; line-height: 1;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: background .15s ease, color .15s ease;
 }
-#chat-panel .chat-close:hover { color: var(--text); }
+#chat-panel .chat-close:hover { color: #fff; background: var(--danger); }
 #chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -1119,6 +1163,25 @@ html, body {
   .home-wrap { margin-top: 4vh; }
 }
 
+/* =========================================================
+   v11 — Visible "Quitter" button in game topbar
+   ========================================================= */
+#btn-leave-game {
+  background: var(--bg-2);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+#btn-leave-game:hover { background: var(--danger); color: #fff; }
+@media (max-width: 600px) {
+  #btn-leave-game { padding: 4px 8px; font-size: 11px; }
+}
+
   </style>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -1156,7 +1219,7 @@ html, body {
     <div class="home-wrap">
       <h1 class="logo">UnoPlay<span class="logo-dot">.</span></h1>
       <p class="tagline">Joue en ligne avec tes amis. Aucune installation.</p>
-      <p style="font-size:10px;color:#444;margin-top:-8px;">build v10</p>
+      <p style="font-size:10px;color:#444;margin-top:-8px;">build v11</p>
 
       <div class="card-panel">
         <div class="home-buttons">
@@ -1283,7 +1346,7 @@ html, body {
         <span id="game-current-color-pill" class="current-color-pill"><span class="dot"></span><span class="label">—</span></span>
       </div>
       <div class="topbar-right">
-        <button id="btn-leave-game" class="btn-link">Quitter</button>
+        <button id="btn-leave-game" title="Quitter la partie">🚪 Quitter</button>
       </div>
     </header>
     <div id="opponents" class="opponents"></div>
@@ -1685,25 +1748,44 @@ html, body {
      --------------------------------------------------------- */
   const CHAT_PRESETS = {
     salutations: [
-      { id: 'hi',      text: 'Salut !' },
-      { id: 'hello',   text: 'Bonjour 👋' },
-      { id: 'bye',     text: 'Au revoir' },
-      { id: 'leaving', text: 'Je dois quitter' },
-      { id: 'back',    text: 'Je reviens' }
+      { id: 'hi',       text: 'Salut !' },
+      { id: 'hello',    text: 'Bonjour 👋' },
+      { id: 'evening',  text: 'Bonsoir 🌙' },
+      { id: 'bye',      text: 'Au revoir' },
+      { id: 'cya',      text: 'À plus !' },
+      { id: 'gn',       text: 'Bonne nuit 😴' },
+      { id: 'leaving',  text: 'Je dois quitter' },
+      { id: 'back',     text: 'Je reviens' },
+      { id: 're',       text: 'Re !' },
+      { id: 'gj',       text: 'Bon jeu !' }
     ],
     reactions: [
-      { id: 'gg',      text: 'GG !' },
-      { id: 'bravo',   text: 'Bravo !' },
-      { id: 'lucky',   text: 'Coup de chance' },
-      { id: 'ohno',    text: 'Oh non...' },
-      { id: 'nice',    text: 'Bien joué !' },
-      { id: 'easy',    text: 'Trop facile 😎' }
+      { id: 'gg',       text: 'GG !' },
+      { id: 'bravo',    text: 'Bravo !' },
+      { id: 'lucky',    text: 'Coup de chance' },
+      { id: 'ohno',     text: 'Oh non...' },
+      { id: 'nice',     text: 'Bien joué !' },
+      { id: 'easy',     text: 'Trop facile 😎' },
+      { id: 'lol',      text: 'Ahah !' },
+      { id: 'wow',      text: 'Wow 😮' },
+      { id: 'srsly',    text: 'Sérieux ?!' },
+      { id: 'fire',     text: 'Trop fort 🔥' },
+      { id: 'oof',      text: 'Mince 😅' },
+      { id: 'phew',     text: 'Ouf !' },
+      { id: 'crazy',    text: 'Incroyable' },
+      { id: 'shot',     text: 'Quel coup !' },
+      { id: 'hot',      text: "T'es chaud !" }
     ],
     encouragements: [
-      { id: 'goodtry', text: 'Pas grave' },
-      { id: 'tough',   text: 'Dommage' },
-      { id: 'youcan',  text: 'Tu peux le faire !' },
-      { id: 'comeon',  text: 'Allez allez !' }
+      { id: 'goodtry',  text: 'Pas grave' },
+      { id: 'tough',    text: 'Dommage' },
+      { id: 'youcan',   text: 'Tu peux le faire !' },
+      { id: 'comeon',   text: 'Allez allez !' },
+      { id: 'focus',    text: 'Concentre-toi 💪' },
+      { id: 'chill',    text: "T'inquiète !" },
+      { id: 'calm',     text: 'Calme et focus' },
+      { id: 'positive', text: 'Reste positif' },
+      { id: 'youwin',   text: 'Tu vas gagner !' }
     ],
     game: [
       { id: 'yourturn', text: 'À toi !' },
@@ -1711,7 +1793,15 @@ html, body {
       { id: 'wait',     text: 'Attendez' },
       { id: 'ready',    text: 'Je suis prêt' },
       { id: 'careful',  text: 'Attention !' },
-      { id: 'uno',      text: 'UNO incoming 😏' }
+      { id: 'uno',      text: 'UNO incoming 😏' },
+      { id: 'good',     text: 'Bien vu !' },
+      { id: 'draw',     text: 'Pioche !' },
+      { id: 'plus4',    text: '+4 incoming 😈' },
+      { id: 'plus2',    text: '+2 surprise !' },
+      { id: 'reverse',  text: 'Inversion ?' },
+      { id: 'skip',     text: 'Saute-le 😂' },
+      { id: 'color',    text: 'Couleur ?' },
+      { id: 'hurry',    text: 'Vite vite !' }
     ]
   };
 
@@ -2631,11 +2721,12 @@ html, body {
   const PRESETS = Cards.CHAT_PRESETS;
 
   /* =========================================================
-     Anti-spam: 3 messages in <3s between each → 10s cooldown
+     Anti-spam (v11): 3 messages in <3s → 5s cooldown.
+     Applied uniformly to both free-text AND preset messages.
      ========================================================= */
   const SPAM_WINDOW_MS = 3000;
   const SPAM_THRESHOLD = 3;
-  const COOLDOWN_MS    = 10000;
+  const COOLDOWN_MS    = 5000;
 
   /* =========================================================
      Module state
@@ -2847,7 +2938,14 @@ html, body {
   }
   function sendPreset(text) {
     if (Chat.mode === 'off') return;
-    // Presets bypass the free-text spam window (they're capped by being short list).
+    // v11: presets go through the SAME anti-spam window as free text.
+    const spam = checkSpam();
+    if (!spam.ok) {
+      window.UnoUI && UnoUI.toast(`Anti-spam : attends ${Math.ceil((spam.until - Date.now())/1000)}s.`, { error: true });
+      window.UnoUI && UnoUI.Audio.error();
+      return;
+    }
+    recordSend();
     if (Chat.onSend) Chat.onSend(text, true);
   }
 
@@ -2857,6 +2955,7 @@ html, body {
   function open() {
     if (!Chat.panelEl) return;
     Chat.panelEl.classList.add('open');
+    document.body.classList.add('chat-is-open');  // v11: triggers audio-bar slide-left
     Chat.isOpen = true;
     clearUnread();
     setTimeout(() => Chat.inputEl && Chat.inputEl.focus(), 100);
@@ -2864,6 +2963,7 @@ html, body {
   function close() {
     if (!Chat.panelEl) return;
     Chat.panelEl.classList.remove('open');
+    document.body.classList.remove('chat-is-open');  // v11: restore audio-bar position
     Chat.isOpen = false;
   }
   function toggle() {
@@ -3757,29 +3857,52 @@ html, body {
     musicFiles: [],   // HTMLAudioElement[] (only successfully loaded ones)
     _currentMusic: null,
     _filesAttempted: false,
+    _longSounds: [],  // v11: refs to long-playing clones (win/lose) so we can stop them
 
+    // v11: PRELOAD all audio files immediately at boot (called from app bootstrap).
+    // Does NOT create an AudioContext (that needs user interaction per browser policy).
+    // Result: when the user later wins/loses, the win/lose mp3 is already buffered
+    // and plays with no latency.
+    preloadFiles() {
+      if (this._filesAttempted) return;
+      this._filesAttempted = true;
+      for (const [name, fn] of Object.entries(this.filenames)) this._tryLoad(name, fn);
+      // Music files: music.mp3, music2.mp3, ..., music10.mp3
+      for (let i = 1; i <= 10; i++) {
+        const fn = i === 1 ? 'music.mp3' : 'music' + i + '.mp3';
+        this._tryLoadMusic(fn);
+      }
+    },
+
+    // v11: Lazy AudioContext setup. Only call this from a user gesture path
+    // (i.e. from _play, which is only triggered by user actions).
+    _initContext() {
+      if (this.ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = this.masterVolume;
+      this.masterGain.connect(this.ctx.destination);
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.value = this.musicVolume;
+      this.musicGain.connect(this.masterGain);
+    },
+
+    // Back-compat: init() = preloadFiles() + _initContext().
+    // Still called from _play() so synth fallback works on first sound.
     init() {
-      if (!this.ctx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) {
-          this.ctx = new AC();
-          this.masterGain = this.ctx.createGain();
-          this.masterGain.gain.value = this.masterVolume;
-          this.masterGain.connect(this.ctx.destination);
-          this.musicGain = this.ctx.createGain();
-          this.musicGain.gain.value = this.musicVolume;
-          this.musicGain.connect(this.masterGain);
-        }
+      this._initContext();
+      this.preloadFiles();
+    },
+
+    // v11: stop any long-playing sound effects (win/lose) immediately.
+    // Called when leaving the gameover screen, restarting a game, or quitting.
+    stopLong() {
+      for (const a of this._longSounds) {
+        try { a.pause(); a.currentTime = 0; } catch {}
       }
-      if (!this._filesAttempted) {
-        this._filesAttempted = true;
-        for (const [name, fn] of Object.entries(this.filenames)) this._tryLoad(name, fn);
-        // Music files: music.mp3, music2.mp3, ..., music10.mp3
-        for (let i = 1; i <= 10; i++) {
-          const fn = i === 1 ? 'music.mp3' : 'music' + i + '.mp3';
-          this._tryLoadMusic(fn);
-        }
-      }
+      this._longSounds.length = 0;
     },
     _tryLoadMusic(filename) {
       try {
@@ -3854,6 +3977,16 @@ html, body {
         try {
           const clone = f.cloneNode();
           clone.volume = Math.max(0, Math.min(1, this.masterVolume));
+          // v11: keep refs to win/lose clones so we can stop them when the
+          // player returns to the menu or starts a rematch.
+          const isLong = (name === 'win' || name === 'lose');
+          if (isLong) {
+            this._longSounds.push(clone);
+            clone.addEventListener('ended', () => {
+              const i = this._longSounds.indexOf(clone);
+              if (i >= 0) this._longSounds.splice(i, 1);
+            }, { once: true });
+          }
           clone.play().catch(() => synthFn && synthFn());
           return;
         } catch { /* fall through */ }
@@ -4201,9 +4334,10 @@ html, body {
       const s = document.getElementById('solo-status');
       if (s) { s.textContent = ''; s.className = 'status-line'; }
     }
-    // Chat toggle only visible in-game
+    // v11: Chat toggle visible in BOTH lobby AND game (was game-only).
+    // Lets players chat while waiting in the lobby, not just mid-game.
     if (Chat) {
-      if (screenId === 'game' && App.chatMode !== 'off') Chat.showToggle();
+      if ((screenId === 'game' || screenId === 'lobby') && App.chatMode !== 'off') Chat.showToggle();
       else Chat.hideToggle();
     }
   }
@@ -4218,7 +4352,7 @@ html, body {
     App.currentScreen = target;
     UI.showScreen(target);
     if (Chat) {
-      if (target === 'game' && App.chatMode !== 'off') Chat.showToggle();
+      if ((target === 'game' || target === 'lobby') && App.chatMode !== 'off') Chat.showToggle();
       else Chat.hideToggle();
     }
   }
@@ -4469,9 +4603,12 @@ html, body {
         if (p) {
           p.ready = !!msg.ready;
           if (p.ready) {
+            // v11: SFX only — no chat broadcast. The previous "X est prêt"
+            // chat-log was spammable by toggling ready on/off repeatedly.
+            // We send a dedicated 'sfx' event so clients still hear the sound,
+            // without polluting the chat log.
             UI.Audio.playerReady();
-            if (Chat) Chat.logEvent(`${p.name} est prêt`);
-            App.hostNet.broadcast({ type: 'chat-log', text: `${p.name} est prêt` });
+            App.hostNet.broadcast({ type: 'sfx', name: 'playerReady' });
           }
           broadcastLobby();
         }
@@ -4969,7 +5106,15 @@ html, body {
         if (Chat) Chat.logEvent(msg.text);
         if (/a rejoint/.test(msg.text)) UI.Audio.playerJoin();
         else if (/a quitté/.test(msg.text)) UI.Audio.playerLeave();
-        else if (/est prêt/.test(msg.text)) UI.Audio.playerReady();
+        break;
+      }
+      case 'sfx': {
+        // v11: dedicated SFX-only event (no chat-log spam). Currently used
+        // for the "player ready" sound but generalized for future use.
+        const fn = UI.Audio[msg.name];
+        if (typeof fn === 'function') {
+          try { fn.call(UI.Audio); } catch {}
+        }
         break;
       }
       case 'fx-skip':    UI.showSkipOverlay();    UI.Audio.skip(); break;
@@ -5200,6 +5345,7 @@ html, body {
     $('btn-leave-game').addEventListener('click', async () => {
       const ok = await UI.showConfirm({ title: 'Quitter la partie ?', message: 'Tu seras déconnecté du salon.', okLabel: 'Quitter', danger: true });
       if (!ok) return;
+      UI.Audio.stopLong();   // v11: cut any win/lose music immediately
       UI.Audio.back();
       cleanupNetworking();
       goTo('home');
@@ -5208,11 +5354,13 @@ html, body {
 
   function initGameOverControls() {
     $('btn-back-home').addEventListener('click', () => {
+      UI.Audio.stopLong();   // v11: cut win/lose music immediately
       UI.Audio.back();
       cleanupNetworking();
       goTo('home');
     });
     $('btn-rematch').addEventListener('click', () => {
+      UI.Audio.stopLong();   // v11: cut win/lose music immediately
       UI.Audio.click();
       if (App.role === 'host') doRematch();
       else if (App.role === 'client' && App.clientNet) {
@@ -5519,6 +5667,10 @@ html, body {
 
   function bootstrap() {
     try {
+      // v11: preload all audio files immediately so the first sound (and
+      // especially win/lose music) plays without buffering latency. AudioContext
+      // is still created lazily on first user-triggered sound.
+      try { UnoUI && UnoUI.Audio && UnoUI.Audio.preloadFiles(); } catch {}
       initHome(); initCreate(); initJoin();
       initLobbyControls(); initGameControls(); initGameOverControls();
       initPublicRoomsControls(); initAudioControls();
